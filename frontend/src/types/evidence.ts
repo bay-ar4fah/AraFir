@@ -5,4 +5,5 @@ export interface Evidence {
   size: number;
   sha256: string;
   importedAt: string;
+  importedBy: string;
 }
