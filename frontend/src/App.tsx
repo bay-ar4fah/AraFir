@@ -1,10 +1,11 @@
+import MainLayout from "./layouts/MainLayout";
+import Dashboard from "./pages/Dashboard/Dashboard";
+
 function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <h1 className="text-4xl font-bold">
-        AraFir
-      </h1>
-    </div>
+    <MainLayout>
+      <Dashboard />
+    </MainLayout>
   );
 }
 
