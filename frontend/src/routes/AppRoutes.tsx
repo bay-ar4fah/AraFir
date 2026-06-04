@@ -4,7 +4,7 @@ import Dashboard from "../pages/Dashboard/Dashboard";
 import Timeline from "../pages/Timeline/Timeline";
 import Evidence from "../pages/Evidence/Evidence";
 import AttackGraph from "../pages/AttackGraph/AttackGraph";
-import Mitre from "../pages/Mitre/Mitre";
+import MitrePage from "../pages/Mitre/Mitre";
 import Reports from "../pages/Reports/Reports";
 
 export default function AppRoutes() {
@@ -13,8 +13,14 @@ export default function AppRoutes() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/timeline" element={<Timeline />} />
       <Route path="/evidence" element={<Evidence />} />
-      <Route path="/attack-graph" element={<AttackGraph />} />
-      <Route path="/mitre" element={<Mitre />} />
+      <Route
+        path="/attack-graph"
+        element={<AttackGraph />}
+      />
+      <Route
+        path="/mitre"
+        element={<MitrePage />}
+      />
       <Route path="/reports" element={<Reports />} />
     </Routes>
   );

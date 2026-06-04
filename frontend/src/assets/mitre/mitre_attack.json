@@ -1,0 +1,26 @@
+[
+  {
+    "id": "T1059",
+    "name": "Command and Scripting Interpreter",
+    "tactic": "Execution",
+    "description": "PowerShell or script execution"
+  },
+  {
+    "id": "T1003",
+    "name": "Credential Dumping",
+    "tactic": "Credential Access",
+    "description": "LSASS dumping"
+  },
+  {
+    "id": "T1041",
+    "name": "Exfiltration Over C2 Channel",
+    "tactic": "Exfiltration",
+    "description": "Data exfiltration"
+  },
+  {
+    "id": "T1105",
+    "name": "Ingress Tool Transfer",
+    "tactic": "Command and Control",
+    "description": "Tool download"
+  }
+]
