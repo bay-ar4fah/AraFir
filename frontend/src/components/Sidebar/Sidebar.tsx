@@ -7,13 +7,39 @@ import {
   FileText,
 } from "lucide-react";
 
+import { NavLink } from "react-router-dom";
+
 const menu = [
-  { name: "Dashboard", icon: LayoutDashboard },
-  { name: "Timeline", icon: Clock3 },
-  { name: "Evidence", icon: FolderSearch },
-  { name: "Attack Graph", icon: Network },
-  { name: "MITRE", icon: Shield },
-  { name: "Reports", icon: FileText },
+  {
+    name: "Dashboard",
+    path: "/",
+    icon: LayoutDashboard,
+  },
+  {
+    name: "Timeline",
+    path: "/timeline",
+    icon: Clock3,
+  },
+  {
+    name: "Evidence",
+    path: "/evidence",
+    icon: FolderSearch,
+  },
+  {
+    name: "Attack Graph",
+    path: "/attack-graph",
+    icon: Network,
+  },
+  {
+    name: "MITRE",
+    path: "/mitre",
+    icon: Shield,
+  },
+  {
+    name: "Reports",
+    path: "/reports",
+    icon: FileText,
+  },
 ];
 
 export default function Sidebar() {
@@ -25,15 +51,32 @@ export default function Sidebar() {
 
       <nav className="space-y-2 px-3">
         {menu.map((item) => (
-          <button
+            <NavLink
             key={item.name}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-900 transition"
-          >
+            to={item.path}
+            className={({ isActive }) =>
+                `
+                flex
+                items-center
+                gap-3
+                px-4
+                py-3
+                rounded-lg
+                transition
+
+                ${
+                isActive
+                    ? "bg-cyan-600 text-white"
+                    : "hover:bg-zinc-900 text-zinc-300"
+                }
+                `
+            }
+            >
             <item.icon size={18} />
-            {item.name}
-          </button>
+            <span>{item.name}</span>
+            </NavLink>
         ))}
-      </nav>
+        </nav>
     </aside>
   );
 }
