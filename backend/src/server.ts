@@ -1,13 +1,38 @@
 import express from "express";
+import cors from "cors";
 
-const app = express();
+import {
+  initDatabase
+}
+from "./database/init";
 
-app.get("/", (_req, res) => {
-  res.send("AraFir API Running");
-});
+initDatabase();
 
-app.listen(3001, () => {
-  console.log(
-    "AraFir API Running on port 3001"
-  );
-});
+const app =
+  express();
+
+app.use(cors());
+
+app.use(express.json());
+
+app.get(
+  "/",
+  (_req, res) => {
+
+    res.send(
+      "AraFir API Running"
+    );
+
+  }
+);
+
+app.listen(
+  3001,
+  () => {
+
+    console.log(
+      "AraFir API Running on port 3001"
+    );
+
+  }
+);
