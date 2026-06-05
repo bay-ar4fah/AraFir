@@ -13,12 +13,38 @@ import { addCustodyLog } from "../../services/chainOfCustodyService";
 
 import CustodyPanel from "../../components/Evidence/CustodyPanel";
 
+import { STORAGE_KEYS }
+from "../../constants/storage";
+
+import {
+  saveData,
+  loadData,
+}
+from "../../services/storageService";
+
 export default function EvidencePage() {
   const [evidence, setEvidence] = useState<Evidence[]>([]);
   
   useEffect(() => {
-    getEvidenceList().then(setEvidence);
-  }, []);
+
+  const savedEvidence =
+    loadData<Evidence[]>(
+      STORAGE_KEYS.EVIDENCE,
+      []
+    );
+
+  if (savedEvidence.length > 0) {
+
+    setEvidence(savedEvidence);
+
+  } else {
+
+    getEvidenceList()
+      .then(setEvidence);
+
+  }
+
+}, []);
 
   const handleFiles = async (files: FileList) => {
     const newEvidence = await Promise.all(
@@ -49,36 +75,51 @@ export default function EvidencePage() {
     })
   );
 
-  setEvidence((prev) => [...prev, ...newEvidence]);
+  setEvidence((prev) => {
+
+  const updated = [
+    ...prev,
+    ...newEvidence,
+  ];
+
+  saveData(
+    STORAGE_KEYS.EVIDENCE,
+    updated
+  );
+
+  return updated;
+
+});
+
 };
 
-  return (
-  <div className="p-6 space-y-6">
-
-    <div>
-      <h1 className="text-3xl font-bold">
-        Evidence Repository
-      </h1>
-
-      <p className="text-zinc-400">
-        Manage imported forensic evidence.
-      </p>
-    </div>
-
-    <EvidenceUploader onSelect={handleFiles} />
-
-    <div className="grid grid-cols-3 gap-6">
-
-      <div className="col-span-2">
-        <EvidenceTable evidence={evidence} />
-      </div>
+    return (
+    <div className="p-6 space-y-6">
 
       <div>
-        <CustodyPanel />
+        <h1 className="text-3xl font-bold">
+          Evidence Repository
+        </h1>
+
+        <p className="text-zinc-400">
+          Manage imported forensic evidence.
+        </p>
+      </div>
+
+      <EvidenceUploader onSelect={handleFiles} />
+
+      <div className="grid grid-cols-3 gap-6">
+
+        <div className="col-span-2">
+          <EvidenceTable evidence={evidence} />
+        </div>
+
+        <div>
+          <CustodyPanel />
+        </div>
+
       </div>
 
     </div>
-
-  </div>
-);
+  );
 }

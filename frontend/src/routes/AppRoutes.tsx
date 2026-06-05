@@ -6,6 +6,7 @@ import Evidence from "../pages/Evidence/Evidence";
 import AttackGraph from "../pages/AttackGraph/AttackGraph";
 import MitrePage from "../pages/Mitre/Mitre";
 import Reports from "../pages/Reports/Reports";
+import CorrelationPage from "../pages/Correlation/Correlation";
 
 export default function AppRoutes() {
   return (
@@ -20,6 +21,10 @@ export default function AppRoutes() {
       <Route
         path="/mitre"
         element={<MitrePage />}
+      />
+      <Route
+        path="/correlation"
+        element={<CorrelationPage />}
       />
       <Route path="/reports" element={<Reports />} />
     </Routes>
