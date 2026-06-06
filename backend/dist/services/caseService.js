@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCases = getCases;
 exports.createCase = createCase;
+exports.getCaseById = getCaseById;
 const db_1 = require("../database/db");
 function getCases() {
     return new Promise((resolve, reject) => {
@@ -35,6 +36,19 @@ function createCase(forensicCase) {
             if (err)
                 return reject(err);
             resolve();
+        });
+    });
+}
+function getCaseById(id) {
+    return new Promise((resolve, reject) => {
+        db_1.db.get(`
+      SELECT *
+      FROM cases
+      WHERE id = ?
+      `, [id], (err, row) => {
+            if (err)
+                return reject(err);
+            resolve(row || null);
         });
     });
 }

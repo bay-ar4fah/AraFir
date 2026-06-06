@@ -43,3 +43,23 @@ export function createCase(forensicCase: Case): Promise<void> {
     );
   });
 }
+
+export function getCaseById(
+  id: string
+): Promise<Case | null> {
+  return new Promise((resolve, reject) => {
+    db.get(
+      `
+      SELECT *
+      FROM cases
+      WHERE id = ?
+      `,
+      [id],
+      (err: Error | null, row: unknown) => {
+        if (err) return reject(err);
+
+        resolve((row as Case) || null);
+      }
+    );
+  });
+}

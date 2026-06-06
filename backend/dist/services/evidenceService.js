@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getEvidence = getEvidence;
+exports.getEvidenceByCaseId = getEvidenceByCaseId;
 exports.createEvidence = createEvidence;
 const db_1 = require("../database/db");
 function getEvidence() {
@@ -14,6 +15,20 @@ function getEvidence() {
                 reject(err);
                 return;
             }
+            resolve(rows);
+        });
+    });
+}
+function getEvidenceByCaseId(caseId) {
+    return new Promise((resolve, reject) => {
+        db_1.db.all(`
+      SELECT *
+      FROM evidence
+      WHERE caseId = ?
+      ORDER BY importedAt DESC
+      `, [caseId], (err, rows) => {
+            if (err)
+                return reject(err);
             resolve(rows);
         });
     });

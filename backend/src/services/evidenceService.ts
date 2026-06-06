@@ -37,6 +37,25 @@ export function getEvidence() {
 
 }
 
+export function getEvidenceByCaseId(caseId: string): Promise<Evidence[]> {
+  return new Promise((resolve, reject) => {
+    db.all(
+      `
+      SELECT *
+      FROM evidence
+      WHERE caseId = ?
+      ORDER BY importedAt DESC
+      `,
+      [caseId],
+      (err: Error | null, rows: unknown[]) => {
+        if (err) return reject(err);
+
+        resolve(rows as Evidence[]);
+      }
+    );
+  });
+}
+
 export function createEvidence(
   evidence: Evidence
 ) {

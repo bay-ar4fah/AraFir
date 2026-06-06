@@ -1,20 +1,68 @@
 import { Request, Response } from "express";
-import { getEvidence, createEvidence } from "../services/evidenceService";
 
-export async function listEvidence(req: Request, res: Response) {
+import {
+  getEvidence,
+  createEvidence,
+  getEvidenceByCaseId,
+} from "../services/evidenceService";
+
+export async function listEvidence(
+  _req: Request,
+  res: Response
+) {
   try {
     const data = await getEvidence();
-    res.json(data);
-  } catch {
-    res.status(500).json({ error: "Failed to load evidence" });
+
+    return res.json(data);
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      error: "Failed to load evidence",
+    });
   }
 }
 
-export async function addEvidence(req: Request, res: Response) {
+export async function addEvidence(
+  req: Request,
+  res: Response
+) {
   try {
     await createEvidence(req.body);
-    res.status(201).json({ success: true });
-  } catch {
-    res.status(500).json({ error: "Failed to save evidence" });
+
+    return res.status(201).json({
+      success: true,
+    });
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      error: "Failed to save evidence",
+    });
+  }
+}
+
+export async function listEvidenceByCase(
+  req: Request,
+  res: Response
+) {
+  try {
+    const caseId = req.params.caseId;
+
+    if (!caseId || Array.isArray(caseId)) {
+      return res.status(400).json({
+        error: "Invalid case id",
+      });
+    }
+
+    const data = await getEvidenceByCaseId(caseId);
+
+    return res.json(data);
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      error: "Failed to load case evidence",
+    });
   }
 }

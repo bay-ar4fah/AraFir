@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 
 import {
   getCases,
-  createCase
+  createCase,
+  getCaseById
 } from "../services/caseService";
 
 export async function listCases(
@@ -34,6 +35,37 @@ export async function addCase(
 
     res.status(500).json({
       error: "Failed to create case"
+    });
+  }
+}
+
+export async function detailCase(
+  req: Request,
+  res: Response
+) {
+  try {
+    const id = req.params.id;
+
+    if (!id || Array.isArray(id)) {
+      return res.status(400).json({
+        error: "Invalid case id"
+      });
+    }
+
+    const data = await getCaseById(id);
+
+    if (!data) {
+      return res.status(404).json({
+        error: "Case not found"
+      });
+    }
+
+    return res.json(data);
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      error: "Failed to load case"
     });
   }
 }
