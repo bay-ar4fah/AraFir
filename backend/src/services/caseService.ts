@@ -6,10 +6,8 @@ export function getCases(): Promise<Case[]> {
     db.all(
       `SELECT * FROM cases ORDER BY createdAt DESC`,
       [],
-      (err: Error | null, rows: any[]) => {
-
+      (err: Error | null, rows: unknown[]) => {
         if (err) return reject(err);
-
         resolve(rows as Case[]);
       }
     );
@@ -19,14 +17,17 @@ export function getCases(): Promise<Case[]> {
 export function createCase(forensicCase: Case): Promise<void> {
   return new Promise((resolve, reject) => {
     db.run(
-      `INSERT INTO cases (
+      `
+      INSERT INTO cases (
         id,
         caseName,
         description,
         createdAt,
         investigator,
         status
-      ) VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      VALUES (?, ?, ?, ?, ?, ?)
+      `,
       [
         forensicCase.id,
         forensicCase.caseName,

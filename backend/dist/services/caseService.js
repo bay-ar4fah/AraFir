@@ -14,14 +14,17 @@ function getCases() {
 }
 function createCase(forensicCase) {
     return new Promise((resolve, reject) => {
-        db_1.db.run(`INSERT INTO cases (
+        db_1.db.run(`
+      INSERT INTO cases (
         id,
         caseName,
         description,
         createdAt,
         investigator,
         status
-      ) VALUES (?, ?, ?, ?, ?, ?)`, [
+      )
+      VALUES (?, ?, ?, ?, ?, ?)
+      `, [
             forensicCase.id,
             forensicCase.caseName,
             forensicCase.description,
