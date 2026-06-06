@@ -9,14 +9,56 @@ from "./database/init";
 import evidenceRoutes
 from "./routes/evidenceRoutes";
 
+import { db }
+from "./database/db";
+
+import caseRoutes from "./routes/caseRoutes";
+
 initDatabase();
 
-const app =
-  express();
+const app = express();
 
 app.use(cors());
 
 app.use(express.json());
+
+app.get(
+  "/api/debug/evidence-schema",
+  (_req, res) => {
+
+    db.all(
+      "PRAGMA table_info(evidence)",
+      [],
+      (_err, rows) => {
+
+        res.json(rows);
+
+      }
+    );
+
+  }
+);
+
+app.get(
+  "/api/debug/tables",
+  (_req, res) => {
+
+    db.all(
+      `
+      SELECT name
+      FROM sqlite_master
+      WHERE type='table'
+      `,
+      [],
+      (_err, rows) => {
+
+        res.json(rows);
+
+      }
+    );
+
+  }
+);
 
 app.get(
   "/",
@@ -29,6 +71,16 @@ app.get(
   }
 );
 
+app.use(
+  "/api/evidence",
+  evidenceRoutes
+);
+
+app.use(
+  "/api/cases",
+  caseRoutes
+);
+
 app.listen(
   3001,
   () => {
@@ -38,9 +90,4 @@ app.listen(
     );
 
   }
-);
-
-app.use(
-  "/api/evidence",
-  evidenceRoutes
 );

@@ -7,12 +7,23 @@ function initDatabase() {
         db_1.db.run(`
       CREATE TABLE IF NOT EXISTS evidence (
         id TEXT PRIMARY KEY,
+        caseId TEXT,
         filename TEXT,
         fileType TEXT,
         size INTEGER,
         sha256 TEXT,
         importedAt TEXT,
         importedBy TEXT
+      )
+    `);
+        db_1.db.run(`
+      CREATE TABLE IF NOT EXISTS cases (
+        id TEXT PRIMARY KEY,
+        caseName TEXT NOT NULL,
+        description TEXT,
+        createdAt TEXT,
+        investigator TEXT,
+        status TEXT
       )
     `);
         db_1.db.run(`
