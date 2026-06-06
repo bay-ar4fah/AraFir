@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
+import { BriefcaseBusiness } from "lucide-react";
 
 const menu = [
   {
@@ -16,14 +17,19 @@ const menu = [
     icon: LayoutDashboard,
   },
   {
-    name: "Timeline",
-    path: "/timeline",
-    icon: Clock3,
+  name: "Cases",
+  path: "/cases",
+  icon: BriefcaseBusiness,
   },
   {
     name: "Evidence",
     path: "/evidence",
     icon: FolderSearch,
+  },
+  {
+    name: "Timeline",
+    path: "/timeline",
+    icon: Clock3,
   },
   {
     name: "Attack Graph",
