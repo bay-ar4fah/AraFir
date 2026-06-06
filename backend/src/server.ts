@@ -6,6 +6,9 @@ import {
 }
 from "./database/init";
 
+import evidenceRoutes
+from "./routes/evidenceRoutes";
+
 initDatabase();
 
 const app =
@@ -35,4 +38,9 @@ app.listen(
     );
 
   }
+);
+
+app.use(
+  "/api/evidence",
+  evidenceRoutes
 );
