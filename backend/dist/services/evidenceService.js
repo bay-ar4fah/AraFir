@@ -36,31 +36,29 @@ function getEvidenceByCaseId(caseId) {
 function createEvidence(evidence) {
     return new Promise((resolve, reject) => {
         db_1.db.run(`
-        INSERT INTO evidence
-        (
-          id,
-          filename,
-          fileType,
-          size,
-          sha256,
-          importedAt,
-          importedBy
-        )
-        VALUES
-        (?, ?, ?, ?, ?, ?, ?)
-        `, [
+      INSERT INTO evidence (
+        id,
+        caseId,
+        filename,
+        fileType,
+        size,
+        sha256,
+        importedAt,
+        importedBy
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
             evidence.id,
+            evidence.caseId,
             evidence.filename,
             evidence.fileType,
             evidence.size,
             evidence.sha256,
             evidence.importedAt,
-            evidence.importedBy
+            evidence.importedBy,
         ], (err) => {
-            if (err) {
-                reject(err);
-                return;
-            }
+            if (err)
+                return reject(err);
             resolve();
         });
     });

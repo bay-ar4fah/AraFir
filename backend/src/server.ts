@@ -14,6 +14,8 @@ from "./database/db";
 
 import caseRoutes from "./routes/caseRoutes";
 
+import statusRoutes from "./routes/statusRoutes";
+
 initDatabase();
 
 const app = express();
@@ -79,6 +81,11 @@ app.use(
 app.use(
   "/api/cases",
   caseRoutes
+);
+
+app.use(
+  "/api/status",
+  statusRoutes
 );
 
 app.listen(

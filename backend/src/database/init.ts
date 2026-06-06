@@ -16,7 +16,7 @@ export function initDatabase() {
         importedBy TEXT
       )
     `);
-    
+
     db.run(`
       CREATE TABLE IF NOT EXISTS cases (
         id TEXT PRIMARY KEY,

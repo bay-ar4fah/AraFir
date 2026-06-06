@@ -58,50 +58,37 @@ export function getEvidenceByCaseId(caseId: string): Promise<Evidence[]> {
 
 export function createEvidence(
   evidence: Evidence
-) {
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `
+      INSERT INTO evidence (
+        id,
+        caseId,
+        filename,
+        fileType,
+        size,
+        sha256,
+        importedAt,
+        importedBy
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        evidence.id,
+        evidence.caseId,
+        evidence.filename,
+        evidence.fileType,
+        evidence.size,
+        evidence.sha256,
+        evidence.importedAt,
+        evidence.importedBy,
+      ],
+      (err: Error | null) => {
+        if (err) return reject(err);
 
-  return new Promise<void>(
-    (resolve, reject) => {
-
-      db.run(
-        `
-        INSERT INTO evidence
-        (
-          id,
-          filename,
-          fileType,
-          size,
-          sha256,
-          importedAt,
-          importedBy
-        )
-        VALUES
-        (?, ?, ?, ?, ?, ?, ?)
-        `,
-        [
-          evidence.id,
-          evidence.filename,
-          evidence.fileType,
-          evidence.size,
-          evidence.sha256,
-          evidence.importedAt,
-          evidence.importedBy
-        ],
-        (err) => {
-
-          if (err) {
-
-            reject(err);
-
-            return;
-          }
-
-          resolve();
-
-        }
-      );
-
-    }
-  );
-
+        resolve();
+      }
+    );
+  });
 }
