@@ -1,5 +1,6 @@
 export interface Evidence {
   id: string;
+  caseId: string;
   filename: string;
   fileType: string;
   size: number;

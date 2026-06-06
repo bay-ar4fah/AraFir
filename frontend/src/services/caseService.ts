@@ -27,3 +27,16 @@ export async function createCase(
     throw new Error("Failed to create case");
   }
 }
+
+export async function getCaseById(
+  id: string
+): Promise<Case> {
+  const response =
+    await fetch(`${API_URL}/cases/${id}`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch case");
+  }
+
+  return response.json();
+}

@@ -5,11 +5,21 @@ export default function Navbar() {
         Digital Forensics Dashboard
       </h1>
 
-      <div>
-        <button className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700">
-          Import Evidence
-        </button>
-      </div>
+      <div
+  className="
+    px-4
+    py-2
+    rounded-lg
+    border
+    border-green-500/30
+    bg-green-500/10
+    text-green-400
+    text-sm
+    font-medium
+  "
+>
+  System Ready
+</div>
     </header>
   );
 }

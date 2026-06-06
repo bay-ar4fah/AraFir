@@ -8,6 +8,7 @@ import MitrePage from "../pages/Mitre/Mitre";
 import Reports from "../pages/Reports/Reports";
 import CorrelationPage from "../pages/Correlation/Correlation";
 import CasesPage from "../pages/Cases/Cases";
+import CaseWorkspace from "../pages/Cases/CaseWorkspace";
 
 export default function AppRoutes() {
   return (
@@ -31,6 +32,10 @@ export default function AppRoutes() {
         path="/cases" 
         element={<CasesPage />} 
         />
+      <Route
+        path="/cases/:caseId"
+        element={<CaseWorkspace />}
+      />
       <Route path="/reports" element={<Reports />} />
     </Routes>
   );

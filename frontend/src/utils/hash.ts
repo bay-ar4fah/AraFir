@@ -1,24 +1,12 @@
-export async function sha256File(
-  file: File
-): Promise<string> {
+export async function sha256File(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
 
-  const buffer =
-    await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest(
+    "SHA-256",
+    buffer
+  );
 
-  const hashBuffer =
-    await crypto.subtle.digest(
-      "SHA-256",
-      buffer
-    );
-
-  const hashArray =
-    Array.from(
-      new Uint8Array(hashBuffer)
-    );
-
-  return hashArray
-    .map((b) =>
-      b.toString(16).padStart(2, "0")
-    )
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }

@@ -13,87 +13,86 @@ import { addCustodyLog } from "../../services/chainOfCustodyService";
 
 import CustodyPanel from "../../components/Evidence/CustodyPanel";
 
-import { STORAGE_KEYS }
-from "../../constants/storage";
+import { STORAGE_KEYS } from "../../constants/storage";
 
 import {
   saveData,
   loadData,
-}
-from "../../services/storageService";
+} from "../../services/storageService";
 
 export default function EvidencePage() {
-  const [evidence, setEvidence] = useState<Evidence[]>([]);
-  
+  const [evidence, setEvidence] =
+    useState<Evidence[]>([]);
+
   useEffect(() => {
+    const savedEvidence =
+      loadData<Evidence[]>(
+        STORAGE_KEYS.EVIDENCE,
+        []
+      );
 
-  const savedEvidence =
-    loadData<Evidence[]>(
-      STORAGE_KEYS.EVIDENCE,
-      []
-    );
+    if (savedEvidence.length > 0) {
+      setEvidence(savedEvidence);
+    } else {
+      getEvidenceList().then(setEvidence);
+    }
+  }, []);
 
-  if (savedEvidence.length > 0) {
-
-    setEvidence(savedEvidence);
-
-  } else {
-
-    getEvidenceList()
-      .then(setEvidence);
-
-  }
-
-}, []);
-
-  const handleFiles = async (files: FileList) => {
-    const newEvidence = await Promise.all(
+  const handleFiles = async (
+    files: FileList
+  ) => {
+    const newEvidence: Evidence[] =
+      await Promise.all(
         Array.from(files).map(async (file) => {
+          const evidenceId =
+            crypto.randomUUID();
 
-        const evidenceId = crypto.randomUUID();
-
-        const evidenceItem = {
+          const evidenceItem: Evidence = {
             id: evidenceId,
+            caseId: "global",
             filename: file.name,
             fileType:
-            file.name.split(".").pop()?.toUpperCase() || "UNKNOWN",
+              file.name
+                .split(".")
+                .pop()
+                ?.toUpperCase() ||
+              "UNKNOWN",
             size: file.size,
             sha256: await sha256File(file),
-            importedAt: new Date().toISOString(),
+            importedAt:
+              new Date().toISOString(),
             importedBy: "Investigator",
-        };
+          };
 
-        await addCustodyLog({
+          await addCustodyLog({
             id: crypto.randomUUID(),
-            evidenceId: evidenceId,
+            evidenceId,
             action: "IMPORT",
-            timestamp: new Date().toISOString(),
+            timestamp:
+              new Date().toISOString(),
             user: "Investigator",
-        });
+          });
 
-        return evidenceItem;
-    })
-  );
+          return evidenceItem;
+        })
+      );
 
-  setEvidence((prev) => {
+    setEvidence((prev) => {
+      const updated = [
+        ...prev,
+        ...newEvidence,
+      ];
 
-  const updated = [
-    ...prev,
-    ...newEvidence,
-  ];
+      saveData(
+        STORAGE_KEYS.EVIDENCE,
+        updated
+      );
 
-  saveData(
-    STORAGE_KEYS.EVIDENCE,
-    updated
-  );
+      return updated;
+    });
+  };
 
-  return updated;
-
-});
-
-};
-
-    return (
+  return (
     <div className="p-6 space-y-6">
 
       <div>
@@ -106,12 +105,16 @@ export default function EvidencePage() {
         </p>
       </div>
 
-      <EvidenceUploader onSelect={handleFiles} />
+      <EvidenceUploader
+        onSelect={handleFiles}
+      />
 
       <div className="grid grid-cols-3 gap-6">
 
         <div className="col-span-2">
-          <EvidenceTable evidence={evidence} />
+          <EvidenceTable
+            evidence={evidence}
+          />
         </div>
 
         <div>
