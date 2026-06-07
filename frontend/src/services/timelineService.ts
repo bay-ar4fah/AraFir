@@ -18,7 +18,18 @@ export async function getTimelineByCaseId(
   return response.json();
 }
 
-// legacy helper for old hooks
+export async function getAllTimelineEvents(): Promise<TimelineEvent[]> {
+  const response =
+    await fetch(`${API_URL}/timeline`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch global timeline");
+  }
+
+  return response.json();
+}
+
+// legacy helper
 export async function buildTimeline(): Promise<TimelineEvent[]> {
   return [];
 }

@@ -29,6 +29,7 @@ export default function TimelineView({
           </div>
 
           <div className="text-zinc-500 text-xs mt-2">
+            Case ID: {event.caseId ?? "-"}
             {event.description ?? event.user ?? "-"}
           </div>
         </div>
