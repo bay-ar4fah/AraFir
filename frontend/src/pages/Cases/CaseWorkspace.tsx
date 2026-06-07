@@ -33,6 +33,17 @@ from "../../components/Timeline/CaseTimelinePanel";
 import CaseMitrePanel
 from "../../components/Mitre/CaseMitrePanel";
 
+import type {
+  AttackStory,
+} from "../../types/attackStory";
+
+import {
+  getAttackStoryByCaseId,
+} from "../../services/attackStoryService";
+
+import AttackStoryPanel
+from "../../components/AttackStory/AttackStoryPanel";
+
 import { formatFileSize } from "../../utils/fileUtils";
 
 export default function CaseWorkspace() {
@@ -52,6 +63,9 @@ export default function CaseWorkspace() {
 
   const [isUploading, setIsUploading] =
     useState(false);
+
+  const [attackStory, setAttackStory] =
+  useState<AttackStory | null>(null);
 
   const totalEvidenceSize = useMemo(() => {
     return evidence.reduce(
@@ -99,6 +113,15 @@ export default function CaseWorkspace() {
     setMitreFindings(data);
   };
 
+  const loadAttackStory = async (
+    activeCaseId: string
+  ) => {
+    const data =
+      await getAttackStoryByCaseId(activeCaseId);
+
+    setAttackStory(data);
+  };
+
   useEffect(() => {
     if (!caseId) return;
 
@@ -106,6 +129,7 @@ export default function CaseWorkspace() {
     loadEvidence(caseId);
     loadTimeline(caseId);
     loadMitreFindings(caseId);
+    loadAttackStory(caseId);
   }, [caseId]);
 
   const handleEvidenceUpload = async (
@@ -125,6 +149,7 @@ export default function CaseWorkspace() {
       await loadEvidence(caseId);
       await loadTimeline(caseId);
       await loadMitreFindings(caseId);
+      await loadAttackStory(caseId);
     } catch (err) {
       console.error(err);
       alert("Failed to import artifact");
@@ -404,6 +429,10 @@ export default function CaseWorkspace() {
 
       <CaseMitrePanel
         findings={mitreFindings}
+      />
+
+      <AttackStoryPanel 
+      story={attackStory} 
       />
 
     </div>
