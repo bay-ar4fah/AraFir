@@ -23,6 +23,9 @@ import timelineRoutes from "./routes/timelineRoutes";
 import mitreFindingRoutes
 from "./routes/mitreFindingRoutes";
 
+import attackStoryRoutes
+from "./routes/attackStoryRoutes";
+
 initDatabase();
 
 const app = express();
@@ -108,6 +111,11 @@ app.use(
 app.use(
   "/api",
   mitreFindingRoutes
+);
+
+app.use(
+  "/api",
+  attackStoryRoutes
 );
 
 app.listen(
