@@ -10,6 +10,8 @@ const evidenceRoutes_1 = __importDefault(require("./routes/evidenceRoutes"));
 const db_1 = require("./database/db");
 const caseRoutes_1 = __importDefault(require("./routes/caseRoutes"));
 const statusRoutes_1 = __importDefault(require("./routes/statusRoutes"));
+const artifactRoutes_1 = __importDefault(require("./routes/artifactRoutes"));
+const timelineRoutes_1 = __importDefault(require("./routes/timelineRoutes"));
 (0, init_1.initDatabase)();
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
@@ -34,6 +36,8 @@ app.get("/", (_req, res) => {
 app.use("/api/evidence", evidenceRoutes_1.default);
 app.use("/api/cases", caseRoutes_1.default);
 app.use("/api/status", statusRoutes_1.default);
+app.use("/api", artifactRoutes_1.default);
+app.use("/api", timelineRoutes_1.default);
 app.listen(3001, () => {
     console.log("AraFir API Running on port 3001");
 });

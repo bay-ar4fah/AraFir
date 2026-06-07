@@ -16,6 +16,10 @@ import caseRoutes from "./routes/caseRoutes";
 
 import statusRoutes from "./routes/statusRoutes";
 
+import artifactRoutes from "./routes/artifactRoutes";
+
+import timelineRoutes from "./routes/timelineRoutes";
+
 initDatabase();
 
 const app = express();
@@ -86,6 +90,16 @@ app.use(
 app.use(
   "/api/status",
   statusRoutes
+);
+
+app.use(
+  "/api",
+  artifactRoutes
+);
+
+app.use(
+  "/api",
+  timelineRoutes
 );
 
 app.listen(

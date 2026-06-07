@@ -29,6 +29,20 @@ export function initDatabase() {
     `);
 
     db.run(`
+      CREATE TABLE IF NOT EXISTS timeline_events (
+        id TEXT PRIMARY KEY,
+        caseId TEXT,
+        evidenceId TEXT,
+        timestamp TEXT,
+        source TEXT,
+        eventType TEXT,
+        description TEXT,
+        severity TEXT,
+        rawData TEXT
+      )
+    `);
+
+    db.run(`
       CREATE TABLE IF NOT EXISTS custody_logs (
         id TEXT PRIMARY KEY,
         evidenceId TEXT,
