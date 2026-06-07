@@ -58,3 +58,21 @@ export function getTimelineByCaseId(
     );
   });
 }
+
+export function getAllTimelineEvents(): Promise<TimelineEvent[]> {
+  return new Promise((resolve, reject) => {
+    db.all(
+      `
+      SELECT *
+      FROM timeline_events
+      ORDER BY timestamp DESC
+      `,
+      [],
+      (err: Error | null, rows: unknown[]) => {
+        if (err) return reject(err);
+
+        resolve(rows as TimelineEvent[]);
+      }
+    );
+  });
+}
