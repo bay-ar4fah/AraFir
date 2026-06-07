@@ -1,5 +1,17 @@
 import path from "path";
-import type { TimelineEvent } from "../types/timeline";
+import crypto from "crypto";
+
+import type {
+  TimelineEvent,
+} from "../types/timeline";
+
+import {
+  parseEvtxFile,
+} from "./evtx/evtxParser";
+
+import {
+  mapEvtxToTimelineEvents,
+} from "./evtx/evtxTimelineMapper";
 
 export async function parseArtifact(params: {
   filePath: string;
@@ -11,6 +23,10 @@ export async function parseArtifact(params: {
     .extname(params.filename)
     .toLowerCase();
 
+  if (ext === ".evtx") {
+    return parseEvtxArtifact(params);
+  }
+
   if (ext === ".json") {
     return parseJsonArtifact(params);
   }
@@ -19,26 +35,42 @@ export async function parseArtifact(params: {
     return parseCsvArtifact(params);
   }
 
-  if (ext === ".evtx") {
-    return parseEvtxPlaceholder(params);
-  }
+  return createGenericImportEvent(params);
+}
 
-  return [
-    {
-      id: crypto.randomUUID(),
+async function parseEvtxArtifact(params: {
+  filePath: string;
+  filename: string;
+  caseId: string;
+  evidenceId: string;
+}): Promise<TimelineEvent[]> {
+  try {
+    const parsedEvents =
+      await parseEvtxFile(params.filePath);
+
+    if (parsedEvents.length === 0) {
+      return createGenericImportEvent({
+        ...params,
+        eventType: "EVTX_EMPTY_OR_UNREADABLE",
+        severity: "MEDIUM",
+      });
+    }
+
+    return mapEvtxToTimelineEvents({
+      parsedEvents,
       caseId: params.caseId,
       evidenceId: params.evidenceId,
-      timestamp: new Date().toISOString(),
-      source: params.filename,
-      eventType: "FILE_IMPORTED",
-      description: `Evidence file imported: ${params.filename}`,
-      severity: "LOW",
-      rawData: JSON.stringify({
-        filename: params.filename,
-        parser: "generic",
-      }),
-    },
-  ];
+      filename: params.filename,
+    });
+  } catch (err) {
+    console.error("EVTX PARSE ERROR:", err);
+
+    return createGenericImportEvent({
+      ...params,
+      eventType: "EVTX_PARSE_FAILED",
+      severity: "HIGH",
+    });
+  }
 }
 
 async function parseJsonArtifact(params: {
@@ -47,22 +79,11 @@ async function parseJsonArtifact(params: {
   caseId: string;
   evidenceId: string;
 }): Promise<TimelineEvent[]> {
-  return [
-    {
-      id: crypto.randomUUID(),
-      caseId: params.caseId,
-      evidenceId: params.evidenceId,
-      timestamp: new Date().toISOString(),
-      source: params.filename,
-      eventType: "JSON_ARTIFACT_IMPORTED",
-      description: `JSON artifact imported: ${params.filename}`,
-      severity: "LOW",
-      rawData: JSON.stringify({
-        parser: "json",
-        filePath: params.filePath,
-      }),
-    },
-  ];
+  return createGenericImportEvent({
+    ...params,
+    eventType: "JSON_ARTIFACT_IMPORTED",
+    severity: "LOW",
+  });
 }
 
 async function parseCsvArtifact(params: {
@@ -71,30 +92,21 @@ async function parseCsvArtifact(params: {
   caseId: string;
   evidenceId: string;
 }): Promise<TimelineEvent[]> {
-  return [
-    {
-      id: crypto.randomUUID(),
-      caseId: params.caseId,
-      evidenceId: params.evidenceId,
-      timestamp: new Date().toISOString(),
-      source: params.filename,
-      eventType: "CSV_ARTIFACT_IMPORTED",
-      description: `CSV artifact imported: ${params.filename}`,
-      severity: "LOW",
-      rawData: JSON.stringify({
-        parser: "csv",
-        filePath: params.filePath,
-      }),
-    },
-  ];
+  return createGenericImportEvent({
+    ...params,
+    eventType: "CSV_ARTIFACT_IMPORTED",
+    severity: "LOW",
+  });
 }
 
-async function parseEvtxPlaceholder(params: {
+function createGenericImportEvent(params: {
   filePath: string;
   filename: string;
   caseId: string;
   evidenceId: string;
-}): Promise<TimelineEvent[]> {
+  eventType?: string;
+  severity?: TimelineEvent["severity"];
+}): TimelineEvent[] {
   return [
     {
       id: crypto.randomUUID(),
@@ -102,11 +114,16 @@ async function parseEvtxPlaceholder(params: {
       evidenceId: params.evidenceId,
       timestamp: new Date().toISOString(),
       source: params.filename,
-      eventType: "EVTX_ARTIFACT_IMPORTED",
-      description: `EVTX artifact queued for parsing: ${params.filename}`,
-      severity: "MEDIUM",
+      eventType:
+        params.eventType ||
+        "FILE_IMPORTED",
+      description:
+        `Artifact processed: ${params.filename}`,
+      severity:
+        params.severity ||
+        "LOW",
       rawData: JSON.stringify({
-        parser: "evtx-placeholder",
+        filename: params.filename,
         filePath: params.filePath,
       }),
     },

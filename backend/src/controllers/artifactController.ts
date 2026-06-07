@@ -6,6 +6,9 @@ import { createEvidence } from "../services/evidenceService";
 import { createTimelineEvent } from "../services/timelineService";
 import { parseArtifact } from "../parsers/parserRegistry";
 import type { Evidence } from "../types/evidence";
+import {
+  generateMitreFindingsFromEvent,
+} from "../services/mitreFindingService";
 
 function sha256File(filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -70,14 +73,22 @@ export async function uploadArtifact(
       evidenceId,
     });
 
+    let mitreFindingsCount = 0;
+
     for (const event of events) {
       await createTimelineEvent(event);
+
+      const findings =
+        await generateMitreFindingsFromEvent(event);
+
+      mitreFindingsCount += findings.length;
     }
 
     return res.status(201).json({
       success: true,
       evidence,
       timelineEvents: events.length,
+      mitreFindings: mitreFindingsCount,
     });
   } catch (err) {
     console.error(err);

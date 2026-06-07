@@ -20,6 +20,9 @@ import artifactRoutes from "./routes/artifactRoutes";
 
 import timelineRoutes from "./routes/timelineRoutes";
 
+import mitreFindingRoutes
+from "./routes/mitreFindingRoutes";
+
 initDatabase();
 
 const app = express();
@@ -100,6 +103,11 @@ app.use(
 app.use(
   "/api",
   timelineRoutes
+);
+
+app.use(
+  "/api",
+  mitreFindingRoutes
 );
 
 app.listen(

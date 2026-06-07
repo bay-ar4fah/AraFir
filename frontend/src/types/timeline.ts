@@ -1,16 +1,36 @@
-export type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type TimelineSeverity =
+  | "LOW"
+  | "MEDIUM"
+  | "HIGH"
+  | "CRITICAL";
+
+export type LegacyTimelineType =
+  | "IMPORT"
+  | "ANALYZE"
+  | "EXPORT"
+  | string;
 
 export interface TimelineEvent {
   id: string;
-  evidenceId: string;
-  type: "IMPORT" | "ANALYZE" | "EXPORT" | "VIEW";
+  caseId?: string;
+  evidenceId?: string;
+
   timestamp: string;
-  user: string;
 
-  severity: Severity;
+  source?: string;
+  eventType: string;
+  description?: string;
 
+  severity: TimelineSeverity;
+
+  rawData?: string;
+
+  // legacy fields for old timeline components
+  type?: LegacyTimelineType;
+  user?: string;
   metadata?: {
     filename?: string;
     fileType?: string;
+    [key: string]: unknown;
   };
 }

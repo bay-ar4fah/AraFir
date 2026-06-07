@@ -1,18 +1,37 @@
-import type { TimelineEvent } from "../types/timeline";
+import type {
+  TimelineEvent,
+  TimelineSeverity,
+} from "../types/timeline";
 
 export function calculateSeverity(
   event: Omit<TimelineEvent, "severity">
-): "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" {
-  
-  if (event.type === "IMPORT") {
-    if (event.metadata?.fileType === "MEMORY") return "CRITICAL";
-    if (event.metadata?.fileType === "EVTX") return "HIGH";
+): TimelineSeverity {
+  const type =
+    event.type ?? event.eventType;
+
+  if (type === "IMPORT") {
+    if (event.metadata?.fileType === "MEMORY") {
+      return "CRITICAL";
+    }
+
+    if (event.metadata?.fileType === "EVTX") {
+      return "HIGH";
+    }
+
+    return "LOW";
+  }
+
+  if (type === "ANALYZE") {
     return "MEDIUM";
   }
 
-  if (event.type === "ANALYZE") return "MEDIUM";
+  if (type === "EXPORT") {
+    return "LOW";
+  }
 
-  if (event.type === "EXPORT") return "LOW";
+  if (type?.includes("EVTX")) {
+    return "MEDIUM";
+  }
 
   return "LOW";
 }

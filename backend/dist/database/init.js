@@ -40,6 +40,21 @@ function initDatabase() {
       )
     `);
         db_1.db.run(`
+      CREATE TABLE IF NOT EXISTS mitre_findings (
+        id TEXT PRIMARY KEY,
+        caseId TEXT,
+        evidenceId TEXT,
+        timelineEventId TEXT,
+        tactic TEXT,
+        techniqueId TEXT,
+        techniqueName TEXT,
+        severity TEXT,
+        confidence TEXT,
+        description TEXT,
+        createdAt TEXT
+      )
+    `);
+        db_1.db.run(`
       CREATE TABLE IF NOT EXISTS custody_logs (
         id TEXT PRIMARY KEY,
         evidenceId TEXT,

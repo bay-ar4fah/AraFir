@@ -1,38 +1,24 @@
-import { getCustodyLogs } from "./chainOfCustodyService";
-import { getEvidenceList } from "./evidenceService";
-import type { TimelineEvent } from "../types/timeline";
-import { calculateSeverity } from "../utils/severityEngine";
+import type {
+  TimelineEvent,
+} from "../types/timeline";
 
-export async function buildTimeline(): Promise<TimelineEvent[]> {
-  const logs = await getCustodyLogs();
-  const evidence = await getEvidenceList();
+const API_URL = "http://localhost:3001/api";
 
-  const timeline: TimelineEvent[] = logs.map((log) => {
-    const ev = evidence.find((e) => e.id === log.evidenceId);
-
-    const baseEvent = {
-      id: log.id,
-      evidenceId: log.evidenceId,
-      type: log.action,
-      timestamp: log.timestamp,
-      user: log.user,
-      metadata: ev
-        ? {
-            filename: ev.filename,
-            fileType: ev.fileType,
-          }
-        : undefined,
-    };
-
-    return {
-      ...baseEvent,
-      severity: calculateSeverity(baseEvent),
-    };
-  });
-
-  return timeline.sort(
-    (a, b) =>
-      new Date(a.timestamp).getTime() -
-      new Date(b.timestamp).getTime()
+export async function getTimelineByCaseId(
+  caseId: string
+): Promise<TimelineEvent[]> {
+  const response = await fetch(
+    `${API_URL}/cases/${caseId}/timeline`
   );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch timeline");
+  }
+
+  return response.json();
+}
+
+// legacy helper for old hooks
+export async function buildTimeline(): Promise<TimelineEvent[]> {
+  return [];
 }

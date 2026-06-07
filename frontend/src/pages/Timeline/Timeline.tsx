@@ -30,8 +30,7 @@ export default function Timeline() {
         ))}
       </div>
 
-      {/* TIMELINE */}
-      <TimelineView timeline={filtered} />
+      <TimelineView events={filtered} />
     </div>
   );
 }

@@ -3,15 +3,33 @@ import { useParams } from "react-router-dom";
 
 import type { Case } from "../../types/case";
 import type { Evidence } from "../../types/evidence";
+import type { TimelineEvent } from "../../types/timeline";
+import type { MitreFinding } from "../../types/mitreFinding";
 
 import { getCaseById } from "../../services/caseService";
 
 import {
   getEvidenceByCaseId,
-  saveEvidence,
 } from "../../services/evidenceService";
 
-import { sha256File } from "../../utils/hash";
+import {
+  getTimelineByCaseId,
+} from "../../services/timelineService";
+
+import {
+  getMitreFindingsByCaseId,
+} from "../../services/mitreFindingService";
+
+import {
+  uploadArtifact,
+} from "../../services/artifactService";
+
+import CaseTimelinePanel
+from "../../components/Timeline/CaseTimelinePanel";
+
+import CaseMitrePanel
+from "../../components/Mitre/CaseMitrePanel";
+
 import { formatFileSize } from "../../utils/fileUtils";
 
 export default function CaseWorkspace() {
@@ -22,6 +40,12 @@ export default function CaseWorkspace() {
 
   const [evidence, setEvidence] =
     useState<Evidence[]>([]);
+
+  const [timeline, setTimeline] =
+    useState<TimelineEvent[]>([]);
+
+  const [mitreFindings, setMitreFindings] =
+    useState<MitreFinding[]>([]);
 
   const [isUploading, setIsUploading] =
     useState(false);
@@ -37,7 +61,9 @@ export default function CaseWorkspace() {
     if (evidence.length === 0) return "-";
 
     const latest = evidence
-      .map((item) => new Date(item.importedAt).getTime())
+      .map((item) =>
+        new Date(item.importedAt).getTime()
+      )
       .sort((a, b) => b - a)[0];
 
     return new Date(latest).toLocaleString();
@@ -52,11 +78,31 @@ export default function CaseWorkspace() {
     setEvidence(data);
   };
 
+  const loadTimeline = async (
+    activeCaseId: string
+  ) => {
+    const data =
+      await getTimelineByCaseId(activeCaseId);
+
+    setTimeline(data);
+  };
+
+  const loadMitreFindings = async (
+    activeCaseId: string
+  ) => {
+    const data =
+      await getMitreFindingsByCaseId(activeCaseId);
+
+    setMitreFindings(data);
+  };
+
   useEffect(() => {
     if (!caseId) return;
 
     getCaseById(caseId).then(setCaseData);
     loadEvidence(caseId);
+    loadTimeline(caseId);
+    loadMitreFindings(caseId);
   }, [caseId]);
 
   const handleEvidenceUpload = async (
@@ -70,28 +116,15 @@ export default function CaseWorkspace() {
       const fileArray = Array.from(files);
 
       for (const file of fileArray) {
-        const evidenceItem: Evidence = {
-          id: crypto.randomUUID(),
-          caseId,
-          filename: file.name,
-          fileType:
-            file.name
-              .split(".")
-              .pop()
-              ?.toUpperCase() || "UNKNOWN",
-          size: file.size,
-          sha256: await sha256File(file),
-          importedAt: new Date().toISOString(),
-          importedBy: "Investigator",
-        };
-
-        await saveEvidence(evidenceItem);
+        await uploadArtifact(caseId, file);
       }
 
       await loadEvidence(caseId);
+      await loadTimeline(caseId);
+      await loadMitreFindings(caseId);
     } catch (err) {
       console.error(err);
-      alert("Failed to import evidence");
+      alert("Failed to import artifact");
     } finally {
       setIsUploading(false);
     }
@@ -177,7 +210,7 @@ export default function CaseWorkspace() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
           <p className="text-zinc-500 text-sm">
             Evidence
@@ -190,11 +223,21 @@ export default function CaseWorkspace() {
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
           <p className="text-zinc-500 text-sm">
-            Total Size
+            Timeline Events
           </p>
 
           <h2 className="text-3xl font-bold">
-            {formatFileSize(totalEvidenceSize)}
+            {timeline.length}
+          </h2>
+        </div>
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+          <p className="text-zinc-500 text-sm">
+            MITRE Findings
+          </p>
+
+          <h2 className="text-3xl font-bold text-cyan-400">
+            {mitreFindings.length}
           </h2>
         </div>
 
@@ -203,18 +246,18 @@ export default function CaseWorkspace() {
             Last Import
           </p>
 
-          <h2 className="text-lg font-bold">
+          <h2 className="text-sm font-bold leading-tight">
             {lastImported}
           </h2>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
           <p className="text-zinc-500 text-sm">
-            Risk Score
+            Total Size
           </p>
 
-          <h2 className="text-3xl font-bold text-cyan-400">
-            LOW
+          <h2 className="text-3xl font-bold">
+            {formatFileSize(totalEvidenceSize)}
           </h2>
         </div>
       </div>
@@ -337,6 +380,14 @@ export default function CaseWorkspace() {
           </div>
         )}
       </div>
+
+      <CaseTimelinePanel
+        events={timeline}
+      />
+
+      <CaseMitrePanel
+        findings={mitreFindings}
+      />
 
     </div>
   );
