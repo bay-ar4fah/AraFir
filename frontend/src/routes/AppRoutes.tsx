@@ -9,6 +9,7 @@ import Reports from "../pages/Reports/Reports";
 import CorrelationPage from "../pages/Correlation/Correlation";
 import CasesPage from "../pages/Cases/Cases";
 import CaseWorkspace from "../pages/Cases/CaseWorkspace";
+import CaseAttackGraph from "../pages/Cases/CaseAttackGraph";
 
 export default function AppRoutes() {
   return (
@@ -35,6 +36,10 @@ export default function AppRoutes() {
       <Route
         path="/cases/:caseId"
         element={<CaseWorkspace />}
+      />
+      <Route
+        path="/cases/:caseId/graph"
+        element={<CaseAttackGraph />}
       />
       <Route path="/reports" element={<Reports />} />
     </Routes>

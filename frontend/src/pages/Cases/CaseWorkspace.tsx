@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import {
+  Link,
+  useParams,
+} from "react-router-dom";
 
 import type { Case } from "../../types/case";
 import type { Evidence } from "../../types/evidence";
@@ -157,6 +160,20 @@ export default function CaseWorkspace() {
             <span className="px-3 py-1 rounded-lg bg-green-500/20 text-green-400 text-sm">
               {caseData.status}
             </span>
+
+            <Link
+              to={`/cases/${caseData.id}/graph`}
+              className="
+                px-4
+                py-2
+                rounded-lg
+                bg-cyan-600
+                hover:bg-cyan-700
+                text-sm
+              "
+            >
+              View Attack Graph
+            </Link>
 
             <button
               disabled
