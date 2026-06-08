@@ -1,13 +1,22 @@
 export type CustodyAction =
   | "IMPORT"
+  | "HASH_VERIFY"
   | "ANALYZE"
+  | "MITRE_MAPPED"
+  | "VIEW"
+  | "EXCLUDE"
+  | "RESTORE"
   | "EXPORT"
-  | "VIEW";
+  | "REPORT_GENERATED"
+  | "CASE_STATUS_CHANGED";
 
 export interface CustodyLog {
   id: string;
-  evidenceId: string;
+  caseId: string;
+  evidenceId?: string;
   action: CustodyAction;
   timestamp: string;
   user: string;
+  reason?: string;
+  metadata?: string;
 }

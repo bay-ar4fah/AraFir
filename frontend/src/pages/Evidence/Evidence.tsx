@@ -66,10 +66,10 @@ export default function EvidencePage() {
 
           await addCustodyLog({
             id: crypto.randomUUID(),
-            evidenceId,
+            caseId: "global",
+            evidenceId: evidenceId,
             action: "IMPORT",
-            timestamp:
-              new Date().toISOString(),
+            timestamp: new Date().toISOString(),
             user: "Investigator",
           });
 

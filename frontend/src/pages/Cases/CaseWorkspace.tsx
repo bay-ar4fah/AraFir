@@ -8,11 +8,15 @@ import type { Case } from "../../types/case";
 import type { Evidence } from "../../types/evidence";
 import type { TimelineEvent } from "../../types/timeline";
 import type { MitreFinding } from "../../types/mitreFinding";
+import type { AttackStory } from "../../types/attackStory";
+import type { CustodyLog } from "../../types/custody";
 
 import { getCaseById } from "../../services/caseService";
 
 import {
   getEvidenceByCaseId,
+  excludeEvidence,
+  restoreEvidence,
 } from "../../services/evidenceService";
 
 import {
@@ -24,6 +28,14 @@ import {
 } from "../../services/mitreFindingService";
 
 import {
+  getAttackStoryByCaseId,
+} from "../../services/attackStoryService";
+
+import {
+  getCustodyLogsByCaseId,
+} from "../../services/custodyService";
+
+import {
   uploadArtifact,
 } from "../../services/artifactService";
 
@@ -33,16 +45,14 @@ from "../../components/Timeline/CaseTimelinePanel";
 import CaseMitrePanel
 from "../../components/Mitre/CaseMitrePanel";
 
-import type {
-  AttackStory,
-} from "../../types/attackStory";
-
-import {
-  getAttackStoryByCaseId,
-} from "../../services/attackStoryService";
-
 import AttackStoryPanel
 from "../../components/AttackStory/AttackStoryPanel";
+
+import EvidenceStatusBadge
+from "../../components/Evidence/EvidenceStatusBadge";
+
+import CaseCustodyPanel
+from "../../components/Custody/CaseCustodyPanel";
 
 import { formatFileSize } from "../../utils/fileUtils";
 
@@ -61,11 +71,14 @@ export default function CaseWorkspace() {
   const [mitreFindings, setMitreFindings] =
     useState<MitreFinding[]>([]);
 
+  const [attackStory, setAttackStory] =
+    useState<AttackStory | null>(null);
+
+  const [custodyLogs, setCustodyLogs] =
+    useState<CustodyLog[]>([]);
+
   const [isUploading, setIsUploading] =
     useState(false);
-
-  const [attackStory, setAttackStory] =
-  useState<AttackStory | null>(null);
 
   const totalEvidenceSize = useMemo(() => {
     return evidence.reduce(
@@ -122,14 +135,32 @@ export default function CaseWorkspace() {
     setAttackStory(data);
   };
 
+  const loadCustodyLogs = async (
+    activeCaseId: string
+  ) => {
+    const data =
+      await getCustodyLogsByCaseId(activeCaseId);
+
+    setCustodyLogs(data);
+  };
+
+  const refreshCaseWorkspace = async (
+    activeCaseId: string
+  ) => {
+    await Promise.all([
+      loadEvidence(activeCaseId),
+      loadTimeline(activeCaseId),
+      loadMitreFindings(activeCaseId),
+      loadAttackStory(activeCaseId),
+      loadCustodyLogs(activeCaseId),
+    ]);
+  };
+
   useEffect(() => {
     if (!caseId) return;
 
     getCaseById(caseId).then(setCaseData);
-    loadEvidence(caseId);
-    loadTimeline(caseId);
-    loadMitreFindings(caseId);
-    loadAttackStory(caseId);
+    refreshCaseWorkspace(caseId);
   }, [caseId]);
 
   const handleEvidenceUpload = async (
@@ -146,15 +177,58 @@ export default function CaseWorkspace() {
         await uploadArtifact(caseId, file);
       }
 
-      await loadEvidence(caseId);
-      await loadTimeline(caseId);
-      await loadMitreFindings(caseId);
-      await loadAttackStory(caseId);
+      await refreshCaseWorkspace(caseId);
     } catch (err) {
       console.error(err);
       alert("Failed to import artifact");
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleExcludeEvidence = async (
+    item: Evidence
+  ) => {
+    if (!caseId) return;
+
+    const reason = window.prompt(
+      `Reason for excluding ${item.filename}?`
+    );
+
+    if (!reason) return;
+
+    try {
+      await excludeEvidence({
+        evidenceId: item.id,
+        caseId,
+        reason,
+        user: "Investigator",
+      });
+
+      await refreshCaseWorkspace(caseId);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to exclude evidence");
+    }
+  };
+
+  const handleRestoreEvidence = async (
+    item: Evidence
+  ) => {
+    if (!caseId) return;
+
+    try {
+      await restoreEvidence({
+        evidenceId: item.id,
+        caseId,
+        reason: "Evidence restored",
+        user: "Investigator",
+      });
+
+      await refreshCaseWorkspace(caseId);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to restore evidence");
     }
   };
 
@@ -377,7 +451,19 @@ export default function CaseWorkspace() {
             {evidence.map((item) => (
               <div
                 key={item.id}
-                className="border border-zinc-800 rounded-lg p-4 bg-black hover:border-zinc-700 transition"
+                className={`
+                  border
+                  rounded-lg
+                  p-4
+                  bg-black
+                  hover:border-zinc-700
+                  transition
+                  ${
+                    item.status === "EXCLUDED"
+                      ? "border-red-500/30 opacity-75"
+                      : "border-zinc-800"
+                  }
+                `}
               >
                 <div className="flex justify-between items-start gap-4">
                   <div>
@@ -390,9 +476,15 @@ export default function CaseWorkspace() {
                     </p>
                   </div>
 
-                  <span className="px-2 py-1 rounded bg-zinc-800 text-xs text-cyan-400">
-                    {item.fileType}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <EvidenceStatusBadge
+                      status={item.status}
+                    />
+
+                    <span className="px-2 py-1 rounded bg-zinc-800 text-xs text-cyan-400">
+                      {item.fileType}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4 mt-4 text-xs text-zinc-400">
@@ -412,10 +504,42 @@ export default function CaseWorkspace() {
                   </div>
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-zinc-800 text-xs">
+                {item.status === "EXCLUDED" && (
+                  <div className="mt-3 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">
+                    <p>
+                      Excluded by: {item.excludedBy || "-"}
+                    </p>
+
+                    <p className="mt-1">
+                      Reason: {item.excludeReason || "-"}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-3 pt-3 border-t border-zinc-800 flex items-center justify-between text-xs">
                   <span className="text-green-400">
                     Integrity Status: VERIFIED
                   </span>
+
+                  {item.status === "EXCLUDED" ? (
+                    <button
+                      onClick={() =>
+                        handleRestoreEvidence(item)
+                      }
+                      className="px-3 py-1 rounded bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20"
+                    >
+                      Restore
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() =>
+                        handleExcludeEvidence(item)
+                      }
+                      className="px-3 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20"
+                    >
+                      Exclude
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -431,8 +555,12 @@ export default function CaseWorkspace() {
         findings={mitreFindings}
       />
 
-      <AttackStoryPanel 
-      story={attackStory} 
+      <AttackStoryPanel
+        story={attackStory}
+      />
+
+      <CaseCustodyPanel
+        logs={custodyLogs}
       />
 
     </div>

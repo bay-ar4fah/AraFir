@@ -41,3 +41,55 @@ export async function saveEvidence(
     throw new Error("Failed to save evidence");
   }
 }
+
+export async function excludeEvidence(params: {
+  evidenceId: string;
+  caseId: string;
+  reason: string;
+  user?: string;
+}): Promise<void> {
+  const response = await fetch(
+    `${API_URL}/evidence/${params.evidenceId}/exclude`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        caseId: params.caseId,
+        reason: params.reason,
+        user: params.user || "Investigator",
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to exclude evidence");
+  }
+}
+
+export async function restoreEvidence(params: {
+  evidenceId: string;
+  caseId: string;
+  reason?: string;
+  user?: string;
+}): Promise<void> {
+  const response = await fetch(
+    `${API_URL}/evidence/${params.evidenceId}/restore`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        caseId: params.caseId,
+        reason: params.reason || "Evidence restored",
+        user: params.user || "Investigator",
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to restore evidence");
+  }
+}

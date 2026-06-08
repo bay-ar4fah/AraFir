@@ -7,4 +7,8 @@ export interface Evidence {
   sha256: string;
   importedAt: string;
   importedBy: string;
+  status?: "ACTIVE" | "EXCLUDED";
+  excludedAt?: string;
+  excludedBy?: string;
+  excludeReason?: string;
 }

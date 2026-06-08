@@ -1,15 +1,10 @@
 import { useEffect, useState } from "react";
-
 import type {
-  Node,
   Edge,
-} from "reactflow";
-
-import { buildAttackGraph }
-from "../services/attackGraphService";
+  Node,
+} from "@xyflow/react";
 
 export function useAttackGraph() {
-
   const [nodes, setNodes] =
     useState<Node[]>([]);
 
@@ -17,15 +12,22 @@ export function useAttackGraph() {
     useState<Edge[]>([]);
 
   useEffect(() => {
-
-    buildAttackGraph().then((data) => {
+    async function loadGraph() {
+      const data = {
+        nodes: [],
+        edges: [],
+      };
 
       setNodes(data.nodes);
 
-      setEdges(data.edges);
+      setEdges(
+        data.edges.filter((edge: Edge) => {
+          return edge.source && edge.target;
+        })
+      );
+    }
 
-    });
-
+    loadGraph();
   }, []);
 
   return {
