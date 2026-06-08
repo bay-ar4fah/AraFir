@@ -5,17 +5,21 @@ export function initDatabase() {
   db.serialize(() => {
 
     db.run(`
-      CREATE TABLE IF NOT EXISTS evidence (
-        id TEXT PRIMARY KEY,
-        caseId TEXT,
-        filename TEXT,
-        fileType TEXT,
-        size INTEGER,
-        sha256 TEXT,
-        importedAt TEXT,
-        importedBy TEXT
-      )
-    `);
+    CREATE TABLE IF NOT EXISTS evidence (
+      id TEXT PRIMARY KEY,
+      caseId TEXT,
+      filename TEXT,
+      fileType TEXT,
+      size INTEGER,
+      sha256 TEXT,
+      importedAt TEXT,
+      importedBy TEXT,
+      status TEXT DEFAULT 'ACTIVE',
+      excludedAt TEXT,
+      excludedBy TEXT,
+      excludeReason TEXT
+    )
+  `);
 
     db.run(`
       CREATE TABLE IF NOT EXISTS cases (
@@ -61,10 +65,13 @@ export function initDatabase() {
     db.run(`
       CREATE TABLE IF NOT EXISTS custody_logs (
         id TEXT PRIMARY KEY,
+        caseId TEXT,
         evidenceId TEXT,
         action TEXT,
         timestamp TEXT,
-        user TEXT
+        user TEXT,
+        reason TEXT,
+        metadata TEXT
       )
     `);
 

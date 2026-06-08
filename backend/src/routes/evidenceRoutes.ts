@@ -5,9 +5,10 @@ from "express";
 
 import {
   listEvidence,
-  addEvidence
-}
-from "../controllers/evidenceController";
+  addEvidence,
+  excludeEvidenceById,
+  restoreEvidenceById,
+} from "../controllers/evidenceController";
 
 const router =
   Router();
@@ -20,6 +21,16 @@ router.get(
 router.post(
   "/",
   addEvidence
+);
+
+router.patch(
+  "/:evidenceId/exclude",
+  excludeEvidenceById
+);
+
+router.patch(
+  "/:evidenceId/restore",
+  restoreEvidenceById
 );
 
 export default router;

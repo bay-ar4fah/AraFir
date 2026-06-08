@@ -3,17 +3,36 @@ import crypto from "crypto";
 import fs from "fs";
 
 import { createEvidence } from "../services/evidenceService";
-import { createTimelineEvent } from "../services/timelineService";
-import { parseArtifact } from "../parsers/parserRegistry";
-import type { Evidence } from "../types/evidence";
+
+import {
+  createCustodyLog,
+} from "../services/custodyService";
+
+import {
+  createTimelineEvent,
+} from "../services/timelineService";
+
+import {
+  parseArtifact,
+} from "../parsers/parserRegistry";
+
+import type {
+  Evidence,
+} from "../types/evidence";
+
 import {
   generateMitreFindingsFromEvent,
 } from "../services/mitreFindingService";
 
-function sha256File(filePath: string): Promise<string> {
+function sha256File(
+  filePath: string
+): Promise<string> {
   return new Promise((resolve, reject) => {
-    const hash = crypto.createHash("sha256");
-    const stream = fs.createReadStream(filePath);
+    const hash =
+      crypto.createHash("sha256");
+
+    const stream =
+      fs.createReadStream(filePath);
 
     stream.on("data", (chunk) => {
       hash.update(chunk);
@@ -46,8 +65,11 @@ export async function uploadArtifact(
       });
     }
 
-    const evidenceId = crypto.randomUUID();
-    const sha256 = await sha256File(req.file.path);
+    const evidenceId =
+      crypto.randomUUID();
+
+    const sha256 =
+      await sha256File(req.file.path);
 
     const evidence: Evidence = {
       id: evidenceId,
@@ -62,16 +84,30 @@ export async function uploadArtifact(
       sha256,
       importedAt: new Date().toISOString(),
       importedBy: "Investigator",
+      status: "ACTIVE",
     };
 
     await createEvidence(evidence);
 
-    const events = await parseArtifact({
-      filePath: req.file.path,
-      filename: req.file.originalname,
+    await createCustodyLog({
       caseId,
       evidenceId,
+      action: "IMPORT",
+      metadata: {
+        filename: evidence.filename,
+        fileType: evidence.fileType,
+        size: evidence.size,
+        sha256: evidence.sha256,
+      },
     });
+
+    const events =
+      await parseArtifact({
+        filePath: req.file.path,
+        filename: req.file.originalname,
+        caseId,
+        evidenceId,
+      });
 
     let mitreFindingsCount = 0;
 
@@ -84,11 +120,30 @@ export async function uploadArtifact(
       mitreFindingsCount += findings.length;
     }
 
+    await createCustodyLog({
+      caseId,
+      evidenceId,
+      action: "ANALYZE",
+      metadata: {
+        timelineEvents: events.length,
+      },
+    });
+
+    await createCustodyLog({
+      caseId,
+      evidenceId,
+      action: "MITRE_MAPPED",
+      metadata: {
+        mitreFindings: mitreFindingsCount,
+      },
+    });
+
     return res.status(201).json({
       success: true,
       evidence,
       timelineEvents: events.length,
       mitreFindings: mitreFindingsCount,
+      custodyLogs: 3,
     });
   } catch (err) {
     console.error(err);

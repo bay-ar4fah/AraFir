@@ -70,9 +70,10 @@ export function createEvidence(
         size,
         sha256,
         importedAt,
-        importedBy
+        importedBy,
+        status
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         evidence.id,
@@ -83,7 +84,63 @@ export function createEvidence(
         evidence.sha256,
         evidence.importedAt,
         evidence.importedBy,
+        evidence.status || "ACTIVE",
       ],
+      (err: Error | null) => {
+        if (err) return reject(err);
+
+        resolve();
+      }
+    );
+  });
+}
+
+export function excludeEvidence(params: {
+  evidenceId: string;
+  excludedBy: string;
+  reason: string;
+}): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `
+      UPDATE evidence
+      SET
+        status = 'EXCLUDED',
+        excludedAt = ?,
+        excludedBy = ?,
+        excludeReason = ?
+      WHERE id = ?
+      `,
+      [
+        new Date().toISOString(),
+        params.excludedBy,
+        params.reason,
+        params.evidenceId,
+      ],
+      (err: Error | null) => {
+        if (err) return reject(err);
+
+        resolve();
+      }
+    );
+  });
+}
+
+export function restoreEvidence(
+  evidenceId: string
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `
+      UPDATE evidence
+      SET
+        status = 'ACTIVE',
+        excludedAt = NULL,
+        excludedBy = NULL,
+        excludeReason = NULL
+      WHERE id = ?
+      `,
+      [evidenceId],
       (err: Error | null) => {
         if (err) return reject(err);
 

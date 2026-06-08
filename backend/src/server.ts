@@ -26,6 +26,9 @@ from "./routes/mitreFindingRoutes";
 import attackStoryRoutes
 from "./routes/attackStoryRoutes";
 
+import custodyRoutes
+from "./routes/custodyRoutes";
+
 initDatabase();
 
 const app = express();
@@ -116,6 +119,11 @@ app.use(
 app.use(
   "/api",
   attackStoryRoutes
+);
+
+app.use(
+  "/api",
+  custodyRoutes
 );
 
 app.listen(

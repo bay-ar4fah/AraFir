@@ -5,4 +5,6 @@ const evidenceController_1 = require("../controllers/evidenceController");
 const router = (0, express_1.Router)();
 router.get("/", evidenceController_1.listEvidence);
 router.post("/", evidenceController_1.addEvidence);
+router.patch("/:evidenceId/exclude", evidenceController_1.excludeEvidenceById);
+router.patch("/:evidenceId/restore", evidenceController_1.restoreEvidenceById);
 exports.default = router;

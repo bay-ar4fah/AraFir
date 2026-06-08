@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getEvidence = getEvidence;
 exports.getEvidenceByCaseId = getEvidenceByCaseId;
 exports.createEvidence = createEvidence;
+exports.excludeEvidence = excludeEvidence;
+exports.restoreEvidence = restoreEvidence;
 const db_1 = require("../database/db");
 function getEvidence() {
     return new Promise((resolve, reject) => {
@@ -44,9 +46,10 @@ function createEvidence(evidence) {
         size,
         sha256,
         importedAt,
-        importedBy
+        importedBy,
+        status
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
             evidence.id,
             evidence.caseId,
@@ -56,7 +59,47 @@ function createEvidence(evidence) {
             evidence.sha256,
             evidence.importedAt,
             evidence.importedBy,
+            evidence.status || "ACTIVE",
         ], (err) => {
+            if (err)
+                return reject(err);
+            resolve();
+        });
+    });
+}
+function excludeEvidence(params) {
+    return new Promise((resolve, reject) => {
+        db_1.db.run(`
+      UPDATE evidence
+      SET
+        status = 'EXCLUDED',
+        excludedAt = ?,
+        excludedBy = ?,
+        excludeReason = ?
+      WHERE id = ?
+      `, [
+            new Date().toISOString(),
+            params.excludedBy,
+            params.reason,
+            params.evidenceId,
+        ], (err) => {
+            if (err)
+                return reject(err);
+            resolve();
+        });
+    });
+}
+function restoreEvidence(evidenceId) {
+    return new Promise((resolve, reject) => {
+        db_1.db.run(`
+      UPDATE evidence
+      SET
+        status = 'ACTIVE',
+        excludedAt = NULL,
+        excludedBy = NULL,
+        excludeReason = NULL
+      WHERE id = ?
+      `, [evidenceId], (err) => {
             if (err)
                 return reject(err);
             resolve();
