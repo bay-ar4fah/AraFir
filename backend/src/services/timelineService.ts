@@ -45,14 +45,18 @@ export function getTimelineByCaseId(
   return new Promise((resolve, reject) => {
     db.all(
       `
-      SELECT *
+      SELECT timeline_events.*
       FROM timeline_events
-      WHERE caseId = ?
-      ORDER BY timestamp DESC
+      LEFT JOIN evidence
+        ON evidence.id = timeline_events.evidenceId
+      WHERE timeline_events.caseId = ?
+        AND COALESCE(evidence.status, 'ACTIVE') = 'ACTIVE'
+      ORDER BY timeline_events.timestamp DESC
       `,
       [caseId],
       (err: Error | null, rows: unknown[]) => {
         if (err) return reject(err);
+
         resolve(rows as TimelineEvent[]);
       }
     );
@@ -63,9 +67,12 @@ export function getAllTimelineEvents(): Promise<TimelineEvent[]> {
   return new Promise((resolve, reject) => {
     db.all(
       `
-      SELECT *
+      SELECT timeline_events.*
       FROM timeline_events
-      ORDER BY timestamp DESC
+      LEFT JOIN evidence
+        ON evidence.id = timeline_events.evidenceId
+      WHERE COALESCE(evidence.status, 'ACTIVE') = 'ACTIVE'
+      ORDER BY timeline_events.timestamp DESC
       `,
       [],
       (err: Error | null, rows: unknown[]) => {

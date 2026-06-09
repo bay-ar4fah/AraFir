@@ -88,14 +88,18 @@ export function getMitreFindingsByCaseId(
   return new Promise((resolve, reject) => {
     db.all(
       `
-      SELECT *
+      SELECT mitre_findings.*
       FROM mitre_findings
-      WHERE caseId = ?
-      ORDER BY createdAt DESC
+      LEFT JOIN evidence
+        ON evidence.id = mitre_findings.evidenceId
+      WHERE mitre_findings.caseId = ?
+        AND COALESCE(evidence.status, 'ACTIVE') = 'ACTIVE'
+      ORDER BY mitre_findings.createdAt DESC
       `,
       [caseId],
       (err: Error | null, rows: unknown[]) => {
         if (err) return reject(err);
+
         resolve(rows as MitreFinding[]);
       }
     );
