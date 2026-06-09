@@ -64,7 +64,11 @@ export async function excludeEvidence(params: {
   );
 
   if (!response.ok) {
-    throw new Error("Failed to exclude evidence");
+    const errorText = await response.text();
+
+    throw new Error(
+      `Failed to exclude evidence: ${errorText}`
+    );
   }
 }
 
@@ -90,6 +94,10 @@ export async function restoreEvidence(params: {
   );
 
   if (!response.ok) {
-    throw new Error("Failed to restore evidence");
+    const errorText = await response.text();
+
+    throw new Error(
+      `Failed to restore evidence: ${errorText}`
+    );
   }
 }

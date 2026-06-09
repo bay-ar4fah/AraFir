@@ -80,12 +80,27 @@ export default function CaseWorkspace() {
   const [isUploading, setIsUploading] =
     useState(false);
 
-  const totalEvidenceSize = useMemo(() => {
-    return evidence.reduce(
+  const [activeEvidenceActionId, setActiveEvidenceActionId] =
+    useState<string | null>(null);
+
+  const activeEvidence = useMemo(() => {
+    return evidence.filter(
+      (item) => item.status !== "EXCLUDED"
+    );
+  }, [evidence]);
+
+  const excludedEvidence = useMemo(() => {
+    return evidence.filter(
+      (item) => item.status === "EXCLUDED"
+    );
+  }, [evidence]);
+
+  const activeEvidenceSize = useMemo(() => {
+    return activeEvidence.reduce(
       (total, item) => total + item.size,
       0
     );
-  }, [evidence]);
+  }, [activeEvidence]);
 
   const lastImported = useMemo(() => {
     if (evidence.length === 0) return "-";
@@ -187,50 +202,78 @@ export default function CaseWorkspace() {
   };
 
   const handleExcludeEvidence = async (
-    item: Evidence
-  ) => {
-    if (!caseId) return;
+  item: Evidence
+) => {
+  if (!caseId) return;
 
-    const reason = window.prompt(
-      `Reason for excluding ${item.filename}?`
-    );
+  const reason = window.prompt(
+    `Reason for excluding ${item.filename}?`,
+    "Irrelevant or wrong evidence uploaded"
+  );
 
-    if (!reason) return;
+  if (!reason || reason.trim().length === 0) {
+    alert("Exclude cancelled. Reason is required.");
+    return;
+  }
 
-    try {
-      await excludeEvidence({
-        evidenceId: item.id,
-        caseId,
-        reason,
-        user: "Investigator",
-      });
+  const confirmed = window.confirm(
+    `Exclude evidence "${item.filename}" from active analysis?`
+  );
 
-      await refreshCaseWorkspace(caseId);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to exclude evidence");
-    }
-  };
+  if (!confirmed) return;
 
-  const handleRestoreEvidence = async (
-    item: Evidence
-  ) => {
-    if (!caseId) return;
+  try {
+    setActiveEvidenceActionId(item.id);
 
-    try {
-      await restoreEvidence({
-        evidenceId: item.id,
-        caseId,
-        reason: "Evidence restored",
-        user: "Investigator",
-      });
+    await excludeEvidence({
+      evidenceId: item.id,
+      caseId,
+      reason: reason.trim(),
+      user: "Investigator",
+    });
 
-      await refreshCaseWorkspace(caseId);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to restore evidence");
-    }
-  };
+    await refreshCaseWorkspace(caseId);
+
+    alert("Evidence excluded successfully.");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to exclude evidence. Check backend logs.");
+  } finally {
+    setActiveEvidenceActionId(null);
+  }
+};
+
+    const handleRestoreEvidence = async (
+      item: Evidence
+    ) => {
+      if (!caseId) return;
+
+      const confirmed = window.confirm(
+        `Restore evidence "${item.filename}" back to active analysis?`
+      );
+
+      if (!confirmed) return;
+
+      try {
+        setActiveEvidenceActionId(item.id);
+
+        await restoreEvidence({
+          evidenceId: item.id,
+          caseId,
+          reason: "Evidence restored to active analysis",
+          user: "Investigator",
+        });
+
+        await refreshCaseWorkspace(caseId);
+
+        alert("Evidence restored successfully.");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to restore evidence. Check backend logs.");
+      } finally {
+        setActiveEvidenceActionId(null);
+      }
+    };
 
   if (!caseData) {
     return (
@@ -316,11 +359,11 @@ export default function CaseWorkspace() {
 
           <div>
             <p className="text-zinc-500">
-              Evidence Items
+              Active Evidence
             </p>
 
             <p>
-              {evidence.length}
+              {activeEvidence.length}
             </p>
           </div>
         </div>
@@ -329,11 +372,11 @@ export default function CaseWorkspace() {
       <div className="grid grid-cols-5 gap-4">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
           <p className="text-zinc-500 text-sm">
-            Evidence
+            Active Evidence
           </p>
 
           <h2 className="text-3xl font-bold">
-            {evidence.length}
+            {activeEvidence.length}
           </h2>
         </div>
 
@@ -369,11 +412,11 @@ export default function CaseWorkspace() {
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
           <p className="text-zinc-500 text-sm">
-            Total Size
+            Active Size
           </p>
 
           <h2 className="text-3xl font-bold">
-            {formatFileSize(totalEvidenceSize)}
+            {formatFileSize(activeEvidenceSize)}
           </h2>
         </div>
       </div>
@@ -429,16 +472,16 @@ export default function CaseWorkspace() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-bold">
-              Case Evidence
+              Evidence Repository
             </h2>
 
             <p className="text-zinc-400 text-sm">
-              Evidence records linked to this investigation case.
+              Active and excluded evidence linked to this investigation case.
             </p>
           </div>
 
           <span className="text-sm text-zinc-400">
-            {evidence.length} items
+            {activeEvidence.length} active / {excludedEvidence.length} excluded
           </span>
         </div>
 
@@ -504,18 +547,6 @@ export default function CaseWorkspace() {
                   </div>
                 </div>
 
-                {item.status === "EXCLUDED" && (
-                  <div className="mt-3 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">
-                    <p>
-                      Excluded by: {item.excludedBy || "-"}
-                    </p>
-
-                    <p className="mt-1">
-                      Reason: {item.excludeReason || "-"}
-                    </p>
-                  </div>
-                )}
-
                 <div className="mt-3 pt-3 border-t border-zinc-800 flex items-center justify-between text-xs">
                   <span className="text-green-400">
                     Integrity Status: VERIFIED
@@ -523,21 +554,53 @@ export default function CaseWorkspace() {
 
                   {item.status === "EXCLUDED" ? (
                     <button
+                      disabled={
+                        activeEvidenceActionId === item.id
+                      }
                       onClick={() =>
                         handleRestoreEvidence(item)
                       }
-                      className="px-3 py-1 rounded bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20"
+                      className="
+                        px-3
+                        py-1
+                        rounded
+                        bg-green-500/10
+                        text-green-400
+                        border
+                        border-green-500/30
+                        hover:bg-green-500/20
+                        disabled:opacity-50
+                        disabled:cursor-not-allowed
+                      "
                     >
-                      Restore
+                      {activeEvidenceActionId === item.id
+                        ? "Restoring..."
+                        : "Restore"}
                     </button>
                   ) : (
                     <button
+                      disabled={
+                        activeEvidenceActionId === item.id
+                      }
                       onClick={() =>
                         handleExcludeEvidence(item)
                       }
-                      className="px-3 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20"
+                      className="
+                        px-3
+                        py-1
+                        rounded
+                        bg-red-500/10
+                        text-red-400
+                        border
+                        border-red-500/30
+                        hover:bg-red-500/20
+                        disabled:opacity-50
+                        disabled:cursor-not-allowed
+                      "
                     >
-                      Exclude
+                      {activeEvidenceActionId === item.id
+                        ? "Excluding..."
+                        : "Exclude"}
                     </button>
                   )}
                 </div>

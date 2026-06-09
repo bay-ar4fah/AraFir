@@ -79,12 +79,14 @@ export default function CaseAttackGraph() {
         edges: [] as Edge<AttackGraphEdgeData, string | undefined>[],
         };
     }
-
+   
     return buildAttackGraph({
-        caseData,
-        evidence,
-        timeline,
-        mitreFindings,
+      caseData,
+      evidence: evidence.filter(
+        (item) => item.status !== "EXCLUDED"
+      ),
+      timeline,
+      mitreFindings,
     });
     }, [
     caseData,
