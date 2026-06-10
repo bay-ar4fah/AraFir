@@ -226,10 +226,9 @@ export default function CaseWorkspace() {
     setActiveEvidenceActionId(item.id);
 
     await excludeEvidence({
-      evidenceId: item.id,
+      evidenceId:item.id,
       caseId,
-      reason: reason.trim(),
-      user: "Investigator",
+      reason,
     });
 
     await refreshCaseWorkspace(caseId);
@@ -257,12 +256,11 @@ export default function CaseWorkspace() {
       try {
         setActiveEvidenceActionId(item.id);
 
-        await restoreEvidence({
-          evidenceId: item.id,
+        await restoreEvidence(
+          item.id,
           caseId,
-          reason: "Evidence restored to active analysis",
-          user: "Investigator",
-        });
+          "Evidence restored to active analysis"
+        );
 
         await refreshCaseWorkspace(caseId);
 

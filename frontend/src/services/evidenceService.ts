@@ -1,4 +1,5 @@
 import type { Evidence } from "../types/evidence";
+import { getAuthHeaders } from "./authService";
 
 const API_URL = "http://localhost:3001/api";
 
@@ -46,58 +47,46 @@ export async function excludeEvidence(params: {
   evidenceId: string;
   caseId: string;
   reason: string;
-  user?: string;
 }): Promise<void> {
   const response = await fetch(
     `${API_URL}/evidence/${params.evidenceId}/exclude`,
     {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         caseId: params.caseId,
         reason: params.reason,
-        user: params.user || "Investigator",
       }),
     }
   );
 
   if (!response.ok) {
-    const errorText = await response.text();
-
     throw new Error(
-      `Failed to exclude evidence: ${errorText}`
+      "Failed to exclude evidence"
     );
   }
 }
 
-export async function restoreEvidence(params: {
-  evidenceId: string;
-  caseId: string;
-  reason?: string;
-  user?: string;
-}): Promise<void> {
+export async function restoreEvidence(
+  evidenceId: string,
+  caseId: string,
+  reason?: string
+): Promise<void> {
   const response = await fetch(
-    `${API_URL}/evidence/${params.evidenceId}/restore`,
+    `${API_URL}/evidence/${evidenceId}/restore`,
     {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
-        caseId: params.caseId,
-        reason: params.reason || "Evidence restored",
-        user: params.user || "Investigator",
+        caseId,
+        reason,
       }),
     }
   );
 
   if (!response.ok) {
-    const errorText = await response.text();
-
     throw new Error(
-      `Failed to restore evidence: ${errorText}`
+      "Failed to restore evidence"
     );
   }
 }
