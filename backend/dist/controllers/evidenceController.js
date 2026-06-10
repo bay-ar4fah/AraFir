@@ -6,7 +6,6 @@ exports.listEvidenceByCase = listEvidenceByCase;
 exports.excludeEvidenceById = excludeEvidenceById;
 exports.restoreEvidenceById = restoreEvidenceById;
 const evidenceService_1 = require("../services/evidenceService");
-const evidenceService_2 = require("../services/evidenceService");
 const custodyService_1 = require("../services/custodyService");
 async function listEvidence(_req, res) {
     try {
@@ -55,7 +54,12 @@ async function listEvidenceByCase(req, res) {
 async function excludeEvidenceById(req, res) {
     try {
         const evidenceId = req.params.evidenceId;
-        const { caseId, reason, user, } = req.body;
+        const { caseId, reason } = req.body;
+        if (!req.user) {
+            return res.status(401).json({
+                error: "Unauthorized",
+            });
+        }
         if (!evidenceId || Array.isArray(evidenceId)) {
             return res.status(400).json({
                 error: "Invalid evidence id",
@@ -66,20 +70,28 @@ async function excludeEvidenceById(req, res) {
                 error: "caseId and reason are required",
             });
         }
-        await (0, evidenceService_2.excludeEvidence)({
+        const actor = `${req.user.name} (${req.user.role})`;
+        await (0, evidenceService_1.excludeEvidence)({
             evidenceId,
-            excludedBy: user || "Investigator",
+            excludedBy: actor,
             reason,
         });
         await (0, custodyService_1.createCustodyLog)({
             caseId,
             evidenceId,
             action: "EXCLUDE",
-            user: user || "Investigator",
+            user: actor,
             reason,
         });
         return res.json({
             success: true,
+            excludedBy: {
+                id: req.user.id,
+                name: req.user.name,
+                email: req.user.email,
+                role: req.user.role,
+            },
+            reason,
         });
     }
     catch (err) {
@@ -92,7 +104,12 @@ async function excludeEvidenceById(req, res) {
 async function restoreEvidenceById(req, res) {
     try {
         const evidenceId = req.params.evidenceId;
-        const { caseId, user, reason, } = req.body;
+        const { caseId, reason } = req.body;
+        if (!req.user) {
+            return res.status(401).json({
+                error: "Unauthorized",
+            });
+        }
         if (!evidenceId || Array.isArray(evidenceId)) {
             return res.status(400).json({
                 error: "Invalid evidence id",
@@ -103,16 +120,25 @@ async function restoreEvidenceById(req, res) {
                 error: "caseId is required",
             });
         }
-        await (0, evidenceService_2.restoreEvidence)(evidenceId);
+        const actor = `${req.user.name} (${req.user.role})`;
+        const restoreReason = reason?.trim() || "Evidence restored";
+        await (0, evidenceService_1.restoreEvidence)(evidenceId);
         await (0, custodyService_1.createCustodyLog)({
             caseId,
             evidenceId,
             action: "RESTORE",
-            user: user || "Investigator",
-            reason,
+            user: actor,
+            reason: restoreReason,
         });
         return res.json({
             success: true,
+            restoredBy: {
+                id: req.user.id,
+                name: req.user.name,
+                email: req.user.email,
+                role: req.user.role,
+            },
+            reason: restoreReason,
         });
     }
     catch (err) {

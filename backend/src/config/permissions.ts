@@ -1,0 +1,61 @@
+import type { Permission, UserRole } from "../types/auth";
+
+export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  SUPER_ADMIN: [
+    "case:create",
+    "case:read",
+    "case:update",
+    "case:delete",
+    "evidence:create",
+    "evidence:read",
+    "evidence:update",
+    "evidence:exclude",
+    "evidence:restore",
+    "evidence:delete",
+    "report:export",
+    "audit:read",
+    "user:manage",
+  ],
+
+  DFIR_MANAGER: [
+    "case:create",
+    "case:read",
+    "case:update",
+    "evidence:create",
+    "evidence:read",
+    "evidence:update",
+    "evidence:exclude",
+    "evidence:restore",
+    "report:export",
+    "audit:read",
+  ],
+
+  INVESTIGATOR: [
+    "case:read",
+    "case:update",
+    "evidence:create",
+    "evidence:read",
+    "evidence:update",
+    "evidence:exclude",
+    "evidence:restore",
+    "report:export",
+  ],
+
+  ANALYST: [
+    "case:read",
+    "evidence:read",
+    "report:export",
+  ],
+
+  AUDITOR: [
+    "case:read",
+    "evidence:read",
+    "report:export",
+    "audit:read",
+  ],
+
+  READ_ONLY: [
+    "case:read",
+    "evidence:read",
+  ],
+};

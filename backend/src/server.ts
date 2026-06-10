@@ -29,13 +29,23 @@ from "./routes/attackStoryRoutes";
 import custodyRoutes
 from "./routes/custodyRoutes";
 
+import { seedDefaultAdmin } from "./seeders/userSeeder";
+
+import authRoutes from "./routes/authRoutes";
+
 initDatabase();
+
+setTimeout(() => {
+  seedDefaultAdmin();
+}, 300);
 
 const app = express();
 
 app.use(cors());
 
 app.use(express.json());
+
+app.use("/api/auth", authRoutes);
 
 app.get(
   "/api/debug/evidence-schema",

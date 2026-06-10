@@ -5,21 +5,37 @@ export function initDatabase() {
   db.serialize(() => {
 
     db.run(`
-    CREATE TABLE IF NOT EXISTS evidence (
-      id TEXT PRIMARY KEY,
-      caseId TEXT,
-      filename TEXT,
-      fileType TEXT,
-      size INTEGER,
-      sha256 TEXT,
-      importedAt TEXT,
-      importedBy TEXT,
-      status TEXT DEFAULT 'ACTIVE',
-      excludedAt TEXT,
-      excludedBy TEXT,
-      excludeReason TEXT
-    )
-  `);
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL,
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    db.run(`
+      CREATE TABLE IF NOT EXISTS evidence (
+        id TEXT PRIMARY KEY,
+        caseId TEXT,
+        filename TEXT,
+        fileType TEXT,
+        size INTEGER,
+        sha256 TEXT,
+        importedAt TEXT,
+        importedBy TEXT,
+        status TEXT DEFAULT 'ACTIVE',
+        excludedAt TEXT,
+        excludedBy TEXT,
+        excludeReason TEXT,
+        restoredAt TEXT,
+        restoredBy TEXT,
+        restoreReason TEXT
+      )
+    `);
 
     db.run(`
       CREATE TABLE IF NOT EXISTS cases (

@@ -15,10 +15,16 @@ const timelineRoutes_1 = __importDefault(require("./routes/timelineRoutes"));
 const mitreFindingRoutes_1 = __importDefault(require("./routes/mitreFindingRoutes"));
 const attackStoryRoutes_1 = __importDefault(require("./routes/attackStoryRoutes"));
 const custodyRoutes_1 = __importDefault(require("./routes/custodyRoutes"));
+const userSeeder_1 = require("./seeders/userSeeder");
+const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 (0, init_1.initDatabase)();
+setTimeout(() => {
+    (0, userSeeder_1.seedDefaultAdmin)();
+}, 300);
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
+app.use("/api/auth", authRoutes_1.default);
 app.get("/api/debug/evidence-schema", (_req, res) => {
     db_1.db.all("PRAGMA table_info(evidence)", [], (_err, rows) => {
         res.json(rows);
