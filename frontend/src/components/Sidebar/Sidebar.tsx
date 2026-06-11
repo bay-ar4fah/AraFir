@@ -5,10 +5,12 @@ import {
   Network,
   Shield,
   FileText,
+  Users,
+  BriefcaseBusiness,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
-import { BriefcaseBusiness } from "lucide-react";
+import PermissionGuard from "../Auth/PermissionGuard";
 
 const menu = [
   {
@@ -17,9 +19,9 @@ const menu = [
     icon: LayoutDashboard,
   },
   {
-  name: "Cases",
-  path: "/cases",
-  icon: BriefcaseBusiness,
+    name: "Cases",
+    path: "/cases",
+    icon: BriefcaseBusiness,
   },
   {
     name: "Evidence",
@@ -57,32 +59,56 @@ export default function Sidebar() {
 
       <nav className="space-y-2 px-3">
         {menu.map((item) => (
-            <NavLink
+          <NavLink
             key={item.name}
             to={item.path}
             className={({ isActive }) =>
-                `
-                flex
-                items-center
-                gap-3
-                px-4
-                py-3
-                rounded-lg
-                transition
-
-                ${
+              `
+              flex
+              items-center
+              gap-3
+              px-4
+              py-3
+              rounded-lg
+              transition
+              ${
                 isActive
-                    ? "bg-cyan-600 text-white"
-                    : "hover:bg-zinc-900 text-zinc-300"
-                }
-                `
+                  ? "bg-cyan-600 text-white"
+                  : "hover:bg-zinc-900 text-zinc-300"
+              }
+              `
             }
-            >
+          >
             <item.icon size={18} />
             <span>{item.name}</span>
-            </NavLink>
+          </NavLink>
         ))}
-        </nav>
+
+        <PermissionGuard permission="user:manage">
+          <NavLink
+            to="/users"
+            className={({ isActive }) =>
+              `
+              flex
+              items-center
+              gap-3
+              px-4
+              py-3
+              rounded-lg
+              transition
+              ${
+                isActive
+                  ? "bg-cyan-600 text-white"
+                  : "hover:bg-zinc-900 text-zinc-300"
+              }
+              `
+            }
+          >
+            <Users size={18} />
+            <span>User Management</span>
+          </NavLink>
+        </PermissionGuard>
+      </nav>
     </aside>
   );
 }

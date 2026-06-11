@@ -13,6 +13,7 @@ import CorrelationPage from "../pages/Correlation/Correlation";
 import CasesPage from "../pages/Cases/Cases";
 import CaseWorkspace from "../pages/Cases/CaseWorkspace";
 import CaseAttackGraph from "../pages/Cases/CaseAttackGraph";
+import UserManagement from "../pages/Users/UserManagement";
 
 export default function AppRoutes() {
   return (
@@ -77,6 +78,10 @@ export default function AppRoutes() {
           element={<Reports />}
         />
 
+        <Route
+            path="/users"
+            element={<UserManagement />}
+          />
       </Route>
 
     </Routes>
