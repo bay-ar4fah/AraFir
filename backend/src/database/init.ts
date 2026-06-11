@@ -12,6 +12,8 @@ export function initDatabase() {
         password_hash TEXT NOT NULL,
         role TEXT NOT NULL,
         is_active INTEGER DEFAULT 1,
+        must_change_password INTEGER DEFAULT 1,
+        password_updated_at TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       )

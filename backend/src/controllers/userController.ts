@@ -10,6 +10,8 @@ import {
   resetUserPassword,
 } from "../services/userService";
 
+import { validatePasswordPolicy } from "../utils/passwordPolicy";
+
 const VALID_ROLES: UserRole[] = [
   "SUPER_ADMIN",
   "DFIR_MANAGER",
@@ -60,10 +62,13 @@ export async function addUser(
       });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({
-        error: "Password must be at least 8 characters",
-      });
+    const policy = validatePasswordPolicy(password);
+
+    if (!policy.valid) {
+    return res.status(400).json({
+        error: "Password policy failed",
+        details: policy.errors,
+    });
     }
 
     const existingUser = await getUserByEmail(email);
@@ -220,10 +225,13 @@ export async function resetPassword(
       });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({
-        error: "Password must be at least 8 characters",
-      });
+    const policy = validatePasswordPolicy(password);
+
+    if (!policy.valid) {
+    return res.status(400).json({
+        error: "Password policy failed",
+        details: policy.errors,
+    });
     }
 
     await resetUserPassword({

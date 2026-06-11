@@ -26,4 +26,5 @@ export interface AuthUser {
   name: string;
   email: string;
   role: UserRole;
+  mustChangePassword?: boolean;
 }

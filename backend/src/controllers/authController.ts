@@ -16,13 +16,14 @@ interface UserRow {
   password_hash: string;
   role: UserRole;
   is_active: number;
+  must_change_password: number;
 }
 
 function getUserByEmail(email: string): Promise<UserRow | undefined> {
   return new Promise((resolve, reject) => {
     db.get(
       `
-      SELECT id, name, email, password_hash, role, is_active
+      SELECT id, name, email, password_hash, role, is_active, must_change_password
       FROM users
       WHERE email = ?
       `,
@@ -84,6 +85,7 @@ export async function login(req: Request, res: Response) {
         email: user.email,
         role: user.role,
         permissions: ROLE_PERMISSIONS[user.role],
+        mustChangePassword: user.must_change_password === 1,
       },
     });
   } catch (err) {

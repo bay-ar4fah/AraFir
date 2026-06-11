@@ -80,8 +80,9 @@ export async function createUser(params: {
         email,
         password_hash,
         role,
-        is_active
-      ) VALUES (?, ?, ?, ?, ?, 1)
+        is_active,
+        must_change_password
+        ) VALUES (?, ?, ?, ?, ?, 1, 1)
       `,
       [
         randomUUID(),
@@ -126,8 +127,12 @@ export function setUserActiveStatus(params: {
     db.run(
       `
       UPDATE users
-      SET is_active = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
+        SET
+        password_hash = ?,
+        must_change_password = 1,
+        password_updated_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
       `,
       [params.isActive ? 1 : 0, params.id],
       (err) => {
@@ -152,6 +157,38 @@ export async function resetUserPassword(params: {
       WHERE id = ?
       `,
       [passwordHash, params.id],
+      (err) => {
+        if (err) reject(err);
+        else resolve();
+      }
+    );
+  });
+}
+
+export async function changeOwnPassword(params: {
+  id: string;
+  newPassword: string;
+}): Promise<void> {
+  const passwordHash = await bcrypt.hash(
+    params.newPassword,
+    12
+  );
+
+  return new Promise((resolve, reject) => {
+    db.run(
+      `
+      UPDATE users
+      SET
+        password_hash = ?,
+        must_change_password = 0,
+        password_updated_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+      `,
+      [
+        passwordHash,
+        params.id,
+      ],
       (err) => {
         if (err) reject(err);
         else resolve();

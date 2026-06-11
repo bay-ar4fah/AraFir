@@ -13,18 +13,33 @@ interface JwtPayload {
   role: UserRole;
 }
 
-function getActiveUserById(id: string): Promise<AuthUser | undefined> {
+interface UserRow {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  must_change_password?: number;
+}
+
+function getActiveUserById(
+  id: string
+): Promise<UserRow | undefined> {
   return new Promise((resolve, reject) => {
     db.get(
       `
-      SELECT id, name, email, role
+      SELECT
+        id,
+        name,
+        email,
+        role,
+        must_change_password
       FROM users
       WHERE id = ? AND is_active = 1
       `,
       [id],
       (err, row) => {
         if (err) reject(err);
-        else resolve(row as AuthUser | undefined);
+        else resolve(row as UserRow | undefined);
       }
     );
   });
@@ -56,7 +71,14 @@ export async function requireAuth(
       });
     }
 
-    req.user = user;
+    req.user = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      mustChangePassword:
+        user.must_change_password === 1,
+    };
 
     return next();
   } catch {

@@ -35,6 +35,8 @@ import authRoutes from "./routes/authRoutes";
 
 import userRoutes from "./routes/userRoutes";
 
+import passwordRoutes from "./routes/passwordRoutes";
+
 initDatabase();
 
 setTimeout(() => {
@@ -48,6 +50,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/auth", passwordRoutes);
 
 app.use("/api/users", userRoutes);
 
