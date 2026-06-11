@@ -33,6 +33,8 @@ import { seedDefaultAdmin } from "./seeders/userSeeder";
 
 import authRoutes from "./routes/authRoutes";
 
+import userRoutes from "./routes/userRoutes";
+
 initDatabase();
 
 setTimeout(() => {
@@ -46,6 +48,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+
+app.use("/api/users", userRoutes);
 
 app.get(
   "/api/debug/evidence-schema",
