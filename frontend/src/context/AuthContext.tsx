@@ -7,35 +7,70 @@ import {
 import type {
   ReactNode,
 } from "react";
-import type { AuthUser, Permission } from "../types/auth";
-import { loginRequest } from "../services/authService";
+
+import type {
+  AuthUser,
+  Permission,
+} from "../types/auth";
+
+import {
+  loginRequest,
+} from "../services/authService";
 
 interface AuthContextValue {
   user: AuthUser | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (
+    email: string,
+    password: string
+  ) => Promise<void>;
   logout: () => void;
-  hasPermission: (permission: Permission) => boolean;
+  hasPermission: (
+    permission: Permission
+  ) => boolean;
+  markPasswordChanged: () => void;
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+const AuthContext =
+  createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem("arafir_token")
-  );
+export function AuthProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const [token, setToken] =
+    useState<string | null>(() =>
+      localStorage.getItem("arafir_token")
+    );
 
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    const storedUser = localStorage.getItem("arafir_user");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+  const [user, setUser] =
+    useState<AuthUser | null>(() => {
+      const storedUser =
+        localStorage.getItem("arafir_user");
 
-  async function login(email: string, password: string) {
-    const data = await loginRequest(email, password);
+      return storedUser
+        ? JSON.parse(storedUser)
+        : null;
+    });
 
-    localStorage.setItem("arafir_token", data.token);
-    localStorage.setItem("arafir_user", JSON.stringify(data.user));
+  async function login(
+    email: string,
+    password: string
+  ) {
+    const data =
+      await loginRequest(email, password);
+
+    localStorage.setItem(
+      "arafir_token",
+      data.token
+    );
+
+    localStorage.setItem(
+      "arafir_user",
+      JSON.stringify(data.user)
+    );
 
     setToken(data.token);
     setUser(data.user);
@@ -49,8 +84,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
-  function hasPermission(permission: Permission) {
-    return user?.permissions.includes(permission) ?? false;
+  function hasPermission(
+    permission: Permission
+  ) {
+    return (
+      user?.permissions.includes(permission) ??
+      false
+    );
+  }
+
+  function markPasswordChanged() {
+    if (!user) return;
+
+    const updatedUser: AuthUser = {
+      ...user,
+      mustChangePassword: false,
+    };
+
+    localStorage.setItem(
+      "arafir_user",
+      JSON.stringify(updatedUser)
+    );
+
+    setUser(updatedUser);
   }
 
   return (
@@ -62,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         hasPermission,
+        markPasswordChanged,
       }}
     >
       {children}
@@ -73,7 +130,9 @@ export function useAuth() {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
+    throw new Error(
+      "useAuth must be used inside AuthProvider"
+    );
   }
 
   return context;

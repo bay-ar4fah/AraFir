@@ -33,3 +33,27 @@ export function getAuthHeaders() {
     Authorization: `Bearer ${token}`,
   };
 }
+
+export async function changePasswordRequest(params: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<void> {
+  const res = await fetch(
+    `${API_BASE_URL}/auth/change-password`,
+    {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(params),
+    }
+  );
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+
+    throw new Error(
+      data?.details?.join(", ") ||
+      data?.error ||
+      "Failed to change password"
+    );
+  }
+}

@@ -19,7 +19,17 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      navigate("/");
+
+      const storedUser = localStorage.getItem("arafir_user");
+      const parsedUser = storedUser
+        ? JSON.parse(storedUser)
+        : null;
+
+      if (parsedUser?.mustChangePassword) {
+        navigate("/force-change-password");
+      } else {
+        navigate("/");
+      }
     } catch {
       setError("Invalid email or password");
     } finally {
