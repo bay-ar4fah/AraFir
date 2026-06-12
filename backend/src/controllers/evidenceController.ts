@@ -12,6 +12,14 @@ import {
   createCustodyLog,
 } from "../services/custodyService";
 
+import {
+  createAuditLog,
+} from "../services/auditService";
+
+import {
+  getAuditActor,
+} from "../utils/auditUtils";
+
 export async function listEvidence(
   _req: Request,
   res: Response
@@ -106,7 +114,18 @@ export async function excludeEvidenceById(
       excludedBy: actor,
       reason,
     });
-
+    
+    await createAuditLog({
+      ...getAuditActor(req),
+      action: "EVIDENCE_EXCLUDED",
+      entityType: "EVIDENCE",
+      entityId: evidenceId,
+      caseId,
+      message: "Evidence excluded from active analysis",
+      metadata: {
+        reason,
+      },
+    });
     await createCustodyLog({
       caseId,
       evidenceId,
@@ -165,6 +184,18 @@ export async function restoreEvidenceById(
       reason?.trim() || "Evidence restored";
 
     await restoreEvidence(evidenceId);
+
+    await createAuditLog({
+      ...getAuditActor(req),
+      action: "EVIDENCE_RESTORED",
+      entityType: "EVIDENCE",
+      entityId: evidenceId,
+      caseId,
+      message: "Evidence restored to active analysis",
+      metadata: {
+        reason: restoreReason,
+      },
+    });
 
     await createCustodyLog({
       caseId,

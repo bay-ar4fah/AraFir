@@ -37,6 +37,8 @@ import userRoutes from "./routes/userRoutes";
 
 import passwordRoutes from "./routes/passwordRoutes";
 
+import auditRoutes from "./routes/auditRoutes";
+
 initDatabase();
 
 setTimeout(() => {
@@ -53,6 +55,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/auth", passwordRoutes);
 
 app.use("/api/users", userRoutes);
+
+app.use("/api/audit-logs", auditRoutes);
 
 app.get(
   "/api/debug/evidence-schema",

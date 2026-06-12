@@ -19,6 +19,7 @@ const userSeeder_1 = require("./seeders/userSeeder");
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const passwordRoutes_1 = __importDefault(require("./routes/passwordRoutes"));
+const auditRoutes_1 = __importDefault(require("./routes/auditRoutes"));
 (0, init_1.initDatabase)();
 setTimeout(() => {
     (0, userSeeder_1.seedDefaultAdmin)();
@@ -29,6 +30,7 @@ app.use(express_1.default.json());
 app.use("/api/auth", authRoutes_1.default);
 app.use("/api/auth", passwordRoutes_1.default);
 app.use("/api/users", userRoutes_1.default);
+app.use("/api/audit-logs", auditRoutes_1.default);
 app.get("/api/debug/evidence-schema", (_req, res) => {
     db_1.db.all("PRAGMA table_info(evidence)", [], (_err, rows) => {
         res.json(rows);

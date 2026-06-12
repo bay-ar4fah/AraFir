@@ -7,6 +7,8 @@ exports.excludeEvidenceById = excludeEvidenceById;
 exports.restoreEvidenceById = restoreEvidenceById;
 const evidenceService_1 = require("../services/evidenceService");
 const custodyService_1 = require("../services/custodyService");
+const auditService_1 = require("../services/auditService");
+const auditUtils_1 = require("../utils/auditUtils");
 async function listEvidence(_req, res) {
     try {
         const data = await (0, evidenceService_1.getEvidence)();
@@ -76,6 +78,17 @@ async function excludeEvidenceById(req, res) {
             excludedBy: actor,
             reason,
         });
+        await (0, auditService_1.createAuditLog)({
+            ...(0, auditUtils_1.getAuditActor)(req),
+            action: "EVIDENCE_EXCLUDED",
+            entityType: "EVIDENCE",
+            entityId: evidenceId,
+            caseId,
+            message: "Evidence excluded from active analysis",
+            metadata: {
+                reason,
+            },
+        });
         await (0, custodyService_1.createCustodyLog)({
             caseId,
             evidenceId,
@@ -123,6 +136,17 @@ async function restoreEvidenceById(req, res) {
         const actor = `${req.user.name} (${req.user.role})`;
         const restoreReason = reason?.trim() || "Evidence restored";
         await (0, evidenceService_1.restoreEvidence)(evidenceId);
+        await (0, auditService_1.createAuditLog)({
+            ...(0, auditUtils_1.getAuditActor)(req),
+            action: "EVIDENCE_RESTORED",
+            entityType: "EVIDENCE",
+            entityId: evidenceId,
+            caseId,
+            message: "Evidence restored to active analysis",
+            metadata: {
+                reason: restoreReason,
+            },
+        });
         await (0, custodyService_1.createCustodyLog)({
             caseId,
             evidenceId,

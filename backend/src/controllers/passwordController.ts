@@ -5,6 +5,14 @@ import { db } from "../database/db";
 import { changeOwnPassword } from "../services/userService";
 import { validatePasswordPolicy } from "../utils/passwordPolicy";
 
+import {
+  createAuditLog,
+} from "../services/auditService";
+
+import {
+  getAuditActor,
+} from "../utils/auditUtils";
+
 interface PasswordRow {
   password_hash: string;
 }
@@ -84,6 +92,15 @@ export async function changePassword(
     await changeOwnPassword({
       id: req.user.id,
       newPassword,
+    });
+
+    await createAuditLog({
+      ...getAuditActor(req),
+      action: "PASSWORD_CHANGED",
+      entityType: "USER",
+      entityId: req.user.id,
+      entityName: req.user.name,
+      message: "User changed password successfully",
     });
 
     return res.json({

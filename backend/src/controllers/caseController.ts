@@ -6,6 +6,14 @@ import {
   getCaseById
 } from "../services/caseService";
 
+import {
+  createAuditLog,
+} from "../services/auditService";
+
+import {
+  getAuditActor,
+} from "../utils/auditUtils";
+
 export async function listCases(
   _req: Request,
   res: Response
@@ -30,6 +38,16 @@ export async function addCase(
     res.status(201).json({
       success: true
     });
+
+    await createAuditLog({
+      ...getAuditActor(req),
+      action: "CASE_CREATED",
+      entityType: "CASE",
+      entityId: req.body.id,
+      entityName: req.body.name,
+      message: "Case created successfully",
+    });
+
   } catch (err) {
     console.error(err);
 

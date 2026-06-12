@@ -4,6 +4,8 @@ exports.listCases = listCases;
 exports.addCase = addCase;
 exports.detailCase = detailCase;
 const caseService_1 = require("../services/caseService");
+const auditService_1 = require("../services/auditService");
+const auditUtils_1 = require("../utils/auditUtils");
 async function listCases(_req, res) {
     try {
         const data = await (0, caseService_1.getCases)();
@@ -20,6 +22,14 @@ async function addCase(req, res) {
         await (0, caseService_1.createCase)(req.body);
         res.status(201).json({
             success: true
+        });
+        await (0, auditService_1.createAuditLog)({
+            ...(0, auditUtils_1.getAuditActor)(req),
+            action: "CASE_CREATED",
+            entityType: "CASE",
+            entityId: req.body.id,
+            entityName: req.body.name,
+            message: "Case created successfully",
         });
     }
     catch (err) {
