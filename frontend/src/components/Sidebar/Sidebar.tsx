@@ -7,6 +7,7 @@ import {
   FileText,
   Users,
   BriefcaseBusiness,
+  ScrollText,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
@@ -107,6 +108,30 @@ export default function Sidebar() {
             <Users size={18} />
             <span>User Management</span>
           </NavLink>
+        </PermissionGuard>
+          <PermissionGuard permission="audit:read">
+            <NavLink
+              to="/audit"
+              className={({ isActive }) =>
+                `
+                flex
+                items-center
+                gap-3
+                px-4
+                py-3
+                rounded-lg
+                transition
+                ${
+                  isActive
+                    ? "bg-cyan-600 text-white"
+                    : "hover:bg-zinc-900 text-zinc-300"
+                }
+                `
+              }
+            >
+              <ScrollText size={18} />
+              <span>Audit Trail</span>
+            </NavLink>
         </PermissionGuard>
       </nav>
     </aside>

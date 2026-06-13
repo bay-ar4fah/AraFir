@@ -7,11 +7,13 @@ import CreateCaseModal from "../../components/Cases/CreateCaseModal";
 import {
   createCase,
   getCases,
+  deleteCaseById,
 } from "../../services/caseService";
 
 export default function CasesPage() {
   const [cases, setCases] = useState<Case[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] =
+    useState(false);
 
   const loadCases = async () => {
     const data = await getCases();
@@ -28,6 +30,26 @@ export default function CasesPage() {
     await createCase(forensicCase);
     await loadCases();
     setIsModalOpen(false);
+  };
+
+  const handleDeleteCase = async (
+    caseId: string,
+    caseName: string
+  ) => {
+    const confirmed = window.confirm(
+      `Delete case "${caseName}" permanently? This will remove related evidence, timeline events, MITRE findings, and custody logs.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteCaseById(caseId);
+      await loadCases();
+      alert("Case deleted successfully.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete case.");
+    }
   };
 
   return (
@@ -61,6 +83,12 @@ export default function CasesPage() {
             <CaseCard
               key={item.id}
               forensicCase={item}
+              onDelete={() => {
+                void handleDeleteCase(
+                  item.id,
+                  item.caseName
+                );
+              }}
             />
           ))}
         </div>

@@ -15,6 +15,7 @@ import CaseWorkspace from "../pages/Cases/CaseWorkspace";
 import CaseAttackGraph from "../pages/Cases/CaseAttackGraph";
 import UserManagement from "../pages/Users/UserManagement";
 import ForceChangePassword from "../pages/Auth/ForceChangePassword";
+import AuditLogs from "../pages/Audit/AuditLogs";
 
 export default function AppRoutes() {
   return (
@@ -89,6 +90,10 @@ export default function AppRoutes() {
           />
       </Route>
 
+      <Route
+            path="/audit"
+            element={<AuditLogs />}
+          />
     </Routes>
   );
 }
