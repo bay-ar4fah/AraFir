@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import {
   getCases,
   createCase,
+  deleteCaseCascade,
   getCaseById
 } from "../services/caseService";
 
@@ -84,6 +85,33 @@ export async function detailCase(
 
     return res.status(500).json({
       error: "Failed to load case"
+    });
+  }
+}
+export async function deleteCase(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id } = req.params;
+
+    if (!id || Array.isArray(id)) {
+      return res.status(400).json({
+        error: "Invalid case id",
+      });
+    }
+
+    await deleteCaseCascade(id);
+
+    return res.json({
+      success: true,
+      message: "Case deleted successfully",
+    });
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      error: "Failed to delete case",
     });
   }
 }

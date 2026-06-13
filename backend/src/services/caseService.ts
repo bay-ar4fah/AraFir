@@ -63,3 +63,39 @@ export function getCaseById(
     );
   });
 }
+  export function deleteCaseCascade(
+  caseId: string
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run(
+        `DELETE FROM evidence WHERE caseId = ?`,
+        [caseId]
+      );
+
+      db.run(
+        `DELETE FROM timeline_events WHERE caseId = ?`,
+        [caseId]
+      );
+
+      db.run(
+        `DELETE FROM mitre_findings WHERE caseId = ?`,
+        [caseId]
+      );
+
+      db.run(
+        `DELETE FROM custody_logs WHERE caseId = ?`,
+        [caseId]
+      );
+
+      db.run(
+        `DELETE FROM cases WHERE id = ?`,
+        [caseId],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+  });
+}

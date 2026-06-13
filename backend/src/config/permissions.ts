@@ -31,6 +31,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ],
 
   INVESTIGATOR: [
+    "case:create",
     "case:read",
     "case:update",
     "evidence:create",

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCases = getCases;
 exports.createCase = createCase;
 exports.getCaseById = getCaseById;
+exports.deleteCaseCascade = deleteCaseCascade;
 const db_1 = require("../database/db");
 function getCases() {
     return new Promise((resolve, reject) => {
@@ -49,6 +50,22 @@ function getCaseById(id) {
             if (err)
                 return reject(err);
             resolve(row || null);
+        });
+    });
+}
+function deleteCaseCascade(caseId) {
+    return new Promise((resolve, reject) => {
+        db_1.db.serialize(() => {
+            db_1.db.run(`DELETE FROM evidence WHERE caseId = ?`, [caseId]);
+            db_1.db.run(`DELETE FROM timeline_events WHERE caseId = ?`, [caseId]);
+            db_1.db.run(`DELETE FROM mitre_findings WHERE caseId = ?`, [caseId]);
+            db_1.db.run(`DELETE FROM custody_logs WHERE caseId = ?`, [caseId]);
+            db_1.db.run(`DELETE FROM cases WHERE id = ?`, [caseId], (err) => {
+                if (err)
+                    reject(err);
+                else
+                    resolve();
+            });
         });
     });
 }

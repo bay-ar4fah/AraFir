@@ -4,6 +4,7 @@ import {
   listCases,
   addCase,
   detailCase,
+  deleteCase
 } from "../controllers/caseController";
 
 import {
@@ -41,6 +42,13 @@ router.get(
   requireAuth,
   requirePermission("case:read"),
   detailCase
+);
+
+router.delete(
+  "/:id",
+  requireAuth,
+  requirePermission("case:delete"),
+  deleteCase
 );
 
 export default router;

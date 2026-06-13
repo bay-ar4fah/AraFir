@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.listCases = listCases;
 exports.addCase = addCase;
 exports.detailCase = detailCase;
+exports.deleteCase = deleteCase;
 const caseService_1 = require("../services/caseService");
 const auditService_1 = require("../services/auditService");
 const auditUtils_1 = require("../utils/auditUtils");
@@ -59,6 +60,27 @@ async function detailCase(req, res) {
         console.error(err);
         return res.status(500).json({
             error: "Failed to load case"
+        });
+    }
+}
+async function deleteCase(req, res) {
+    try {
+        const { id } = req.params;
+        if (!id || Array.isArray(id)) {
+            return res.status(400).json({
+                error: "Invalid case id",
+            });
+        }
+        await (0, caseService_1.deleteCaseCascade)(id);
+        return res.json({
+            success: true,
+            message: "Case deleted successfully",
+        });
+    }
+    catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            error: "Failed to delete case",
         });
     }
 }
