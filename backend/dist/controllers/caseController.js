@@ -4,9 +4,12 @@ exports.listCases = listCases;
 exports.addCase = addCase;
 exports.detailCase = detailCase;
 exports.deleteCase = deleteCase;
+exports.reassignCaseById = reassignCaseById;
+exports.listCaseAssignments = listCaseAssignments;
+const crypto_1 = require("crypto");
 const caseService_1 = require("../services/caseService");
-const auditService_1 = require("../services/auditService");
-const auditUtils_1 = require("../utils/auditUtils");
+const caseAssignmentService_1 = require("../services/caseAssignmentService");
+const caseService_2 = require("../services/caseService");
 async function listCases(_req, res) {
     try {
         const data = await (0, caseService_1.getCases)();
@@ -20,23 +23,54 @@ async function listCases(_req, res) {
 }
 async function addCase(req, res) {
     try {
-        await (0, caseService_1.createCase)(req.body);
-        res.status(201).json({
-            success: true
+        if (!req.user) {
+            return res.status(401).json({
+                error: "Unauthorized",
+            });
+        }
+        const { caseName, description, investigatorId, } = req.body;
+        if (!caseName || !investigatorId) {
+            return res.status(400).json({
+                error: "caseName and investigatorId are required",
+            });
+        }
+        const assignedUser = await (0, caseService_1.getAssignableUserById)(investigatorId);
+        if (!assignedUser) {
+            return res.status(400).json({
+                error: "Selected investigator is invalid or inactive",
+            });
+        }
+        const caseId = (0, crypto_1.randomUUID)();
+        await (0, caseService_1.createCase)({
+            id: caseId,
+            caseName,
+            description,
+            investigatorId: assignedUser.id,
+            investigatorName: assignedUser.name,
+            assignedByUserId: req.user.id,
+            assignedByName: req.user.name,
+            status: "OPEN",
         });
-        await (0, auditService_1.createAuditLog)({
-            ...(0, auditUtils_1.getAuditActor)(req),
-            action: "CASE_CREATED",
-            entityType: "CASE",
-            entityId: req.body.id,
-            entityName: req.body.name,
-            message: "Case created successfully",
+        await (0, caseAssignmentService_1.createCaseAssignmentLog)({
+            caseId,
+            assignedToUserId: assignedUser.id,
+            assignedToName: assignedUser.name,
+            assignedToRole: assignedUser.role,
+            assignedByUserId: req.user.id,
+            assignedByName: req.user.name,
+            assignedByRole: req.user.role,
+            action: "ASSIGNED",
+            reason: "Initial case assignment",
+        });
+        return res.status(201).json({
+            success: true,
+            caseId,
         });
     }
     catch (err) {
         console.error(err);
-        res.status(500).json({
-            error: "Failed to create case"
+        return res.status(500).json({
+            error: "Failed to create case",
         });
     }
 }
@@ -81,6 +115,79 @@ async function deleteCase(req, res) {
         console.error(err);
         return res.status(500).json({
             error: "Failed to delete case",
+        });
+    }
+}
+async function reassignCaseById(req, res) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({
+                error: "Unauthorized",
+            });
+        }
+        const { id } = req.params;
+        const { investigatorId, reason, } = req.body;
+        if (!id || Array.isArray(id)) {
+            return res.status(400).json({
+                error: "Invalid case id",
+            });
+        }
+        if (!investigatorId) {
+            return res.status(400).json({
+                error: "investigatorId is required",
+            });
+        }
+        const assignedUser = await (0, caseService_1.getAssignableUserById)(investigatorId);
+        if (!assignedUser) {
+            return res.status(400).json({
+                error: "Selected investigator is invalid or inactive",
+            });
+        }
+        await (0, caseService_2.reassignCase)({
+            caseId: id,
+            investigatorId: assignedUser.id,
+            investigatorName: assignedUser.name,
+            assignedByUserId: req.user.id,
+            assignedByName: req.user.name,
+        });
+        await (0, caseAssignmentService_1.createCaseAssignmentLog)({
+            caseId: id,
+            assignedToUserId: assignedUser.id,
+            assignedToName: assignedUser.name,
+            assignedToRole: assignedUser.role,
+            assignedByUserId: req.user.id,
+            assignedByName: req.user.name,
+            assignedByRole: req.user.role,
+            action: "REASSIGNED",
+            reason: reason || "Case reassigned",
+        });
+        return res.json({
+            success: true,
+            message: "Case reassigned successfully",
+        });
+    }
+    catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            error: "Failed to reassign case",
+        });
+    }
+}
+async function listCaseAssignments(req, res) {
+    try {
+        const { id } = req.params;
+        if (!id || Array.isArray(id)) {
+            return res.status(400).json({
+                error: "Invalid case id",
+            });
+        }
+        const logs = await (0, caseAssignmentService_1.getCaseAssignmentLogs)(id);
+        return res.json(logs);
+    }
+    catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            error: "Failed to load assignment history",
         });
     }
 }

@@ -44,7 +44,12 @@ function initDatabase() {
         description TEXT,
         createdAt TEXT,
         investigator TEXT,
-        status TEXT
+        status TEXT,
+        investigatorId TEXT,
+        investigatorName TEXT,
+        assignedByUserId TEXT,
+        assignedByName TEXT,
+        assignedAt TEXT
       )
     `);
         db_1.db.run(`
@@ -107,6 +112,21 @@ function initDatabase() {
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
+        db_1.db.run(`
+      CREATE TABLE IF NOT EXISTS case_assignment_logs (
+        id TEXT PRIMARY KEY,
+        caseId TEXT NOT NULL,
+        assignedToUserId TEXT NOT NULL,
+        assignedToName TEXT NOT NULL,
+        assignedToRole TEXT NOT NULL,
+        assignedByUserId TEXT,
+        assignedByName TEXT,
+        assignedByRole TEXT,
+        action TEXT NOT NULL,
+        reason TEXT,
+        createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
         console.log("Database Initialized");
     });
 }

@@ -4,7 +4,9 @@ import {
   listCases,
   addCase,
   detailCase,
-  deleteCase
+  deleteCase,
+  reassignCaseById,
+  listCaseAssignments,
 } from "../controllers/caseController";
 
 import {
@@ -35,6 +37,20 @@ router.get(
   requireAuth,
   requirePermission("evidence:read"),
   listEvidenceByCase
+);
+
+router.get(
+  "/:id/assignments",
+  requireAuth,
+  requirePermission("case:read"),
+  listCaseAssignments
+);
+
+router.patch(
+  "/:id/reassign",
+  requireAuth,
+  requirePermission("case:update"),
+  reassignCaseById
 );
 
 router.get(

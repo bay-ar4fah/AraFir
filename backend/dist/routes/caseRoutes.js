@@ -9,6 +9,8 @@ const router = (0, express_1.Router)();
 router.get("/", authMiddleware_1.requireAuth, (0, rbacMiddleware_1.requirePermission)("case:read"), caseController_1.listCases);
 router.post("/", authMiddleware_1.requireAuth, (0, rbacMiddleware_1.requirePermission)("case:create"), caseController_1.addCase);
 router.get("/:caseId/evidence", authMiddleware_1.requireAuth, (0, rbacMiddleware_1.requirePermission)("evidence:read"), evidenceController_1.listEvidenceByCase);
+router.get("/:id/assignments", authMiddleware_1.requireAuth, (0, rbacMiddleware_1.requirePermission)("case:read"), caseController_1.listCaseAssignments);
+router.patch("/:id/reassign", authMiddleware_1.requireAuth, (0, rbacMiddleware_1.requirePermission)("case:update"), caseController_1.reassignCaseById);
 router.get("/:id", authMiddleware_1.requireAuth, (0, rbacMiddleware_1.requirePermission)("case:read"), caseController_1.detailCase);
 router.delete("/:id", authMiddleware_1.requireAuth, (0, rbacMiddleware_1.requirePermission)("case:delete"), caseController_1.deleteCase);
 exports.default = router;

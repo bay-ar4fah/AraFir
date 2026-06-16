@@ -14,7 +14,16 @@ export function getCases(): Promise<Case[]> {
   });
 }
 
-export function createCase(forensicCase: Case): Promise<void> {
+export function createCase(params: {
+  id: string;
+  caseName: string;
+  description: string;
+  investigatorId: string;
+  investigatorName: string;
+  assignedByUserId: string;
+  assignedByName: string;
+  status: string;
+}): Promise<void> {
   return new Promise((resolve, reject) => {
     db.run(
       `
@@ -24,21 +33,28 @@ export function createCase(forensicCase: Case): Promise<void> {
         description,
         createdAt,
         investigator,
+        investigatorId,
+        investigatorName,
+        assignedByUserId,
+        assignedByName,
+        assignedAt,
         status
-      )
-      VALUES (?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
       `,
       [
-        forensicCase.id,
-        forensicCase.caseName,
-        forensicCase.description,
-        forensicCase.createdAt,
-        forensicCase.investigator,
-        forensicCase.status
+        params.id,
+        params.caseName,
+        params.description,
+        params.investigatorName,
+        params.investigatorId,
+        params.investigatorName,
+        params.assignedByUserId,
+        params.assignedByName,
+        params.status,
       ],
-      (err: Error | null) => {
-        if (err) return reject(err);
-        resolve();
+      (err) => {
+        if (err) reject(err);
+        else resolve();
       }
     );
   });
@@ -97,5 +113,69 @@ export function getCaseById(
         }
       );
     });
+  });
+}
+
+export interface AssignableUserRow {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export function getAssignableUserById(
+  userId: string
+): Promise<AssignableUserRow | undefined> {
+  return new Promise((resolve, reject) => {
+    db.get(
+      `
+      SELECT id, name, email, role
+      FROM users
+      WHERE id = ?
+        AND is_active = 1
+        AND role IN ('DFIR_MANAGER', 'INVESTIGATOR')
+      `,
+      [userId],
+      (err, row) => {
+        if (err) reject(err);
+        else resolve(row as AssignableUserRow | undefined);
+      }
+    );
+  });
+}
+
+export function reassignCase(params: {
+  caseId: string;
+  investigatorId: string;
+  investigatorName: string;
+  assignedByUserId: string;
+  assignedByName: string;
+}): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `
+      UPDATE cases
+      SET
+        investigator = ?,
+        investigatorId = ?,
+        investigatorName = ?,
+        assignedByUserId = ?,
+        assignedByName = ?,
+        assignedAt = CURRENT_TIMESTAMP
+      WHERE id = ?
+      `,
+      [
+        params.investigatorName,
+        params.investigatorId,
+        params.investigatorName,
+        params.assignedByUserId,
+        params.assignedByName,
+        params.caseId,
+      ],
+      (err) => {
+        if (err) reject(err);
+        else resolve();
+      }
+    );
   });
 }

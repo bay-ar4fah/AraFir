@@ -4,6 +4,8 @@ exports.getCases = getCases;
 exports.createCase = createCase;
 exports.getCaseById = getCaseById;
 exports.deleteCaseCascade = deleteCaseCascade;
+exports.getAssignableUserById = getAssignableUserById;
+exports.reassignCase = reassignCase;
 const db_1 = require("../database/db");
 function getCases() {
     return new Promise((resolve, reject) => {
@@ -14,7 +16,7 @@ function getCases() {
         });
     });
 }
-function createCase(forensicCase) {
+function createCase(params) {
     return new Promise((resolve, reject) => {
         db_1.db.run(`
       INSERT INTO cases (
@@ -23,20 +25,28 @@ function createCase(forensicCase) {
         description,
         createdAt,
         investigator,
+        investigatorId,
+        investigatorName,
+        assignedByUserId,
+        assignedByName,
+        assignedAt,
         status
-      )
-      VALUES (?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
       `, [
-            forensicCase.id,
-            forensicCase.caseName,
-            forensicCase.description,
-            forensicCase.createdAt,
-            forensicCase.investigator,
-            forensicCase.status
+            params.id,
+            params.caseName,
+            params.description,
+            params.investigatorName,
+            params.investigatorId,
+            params.investigatorName,
+            params.assignedByUserId,
+            params.assignedByName,
+            params.status,
         ], (err) => {
             if (err)
-                return reject(err);
-            resolve();
+                reject(err);
+            else
+                resolve();
         });
     });
 }
@@ -66,6 +76,49 @@ function deleteCaseCascade(caseId) {
                 else
                     resolve();
             });
+        });
+    });
+}
+function getAssignableUserById(userId) {
+    return new Promise((resolve, reject) => {
+        db_1.db.get(`
+      SELECT id, name, email, role
+      FROM users
+      WHERE id = ?
+        AND is_active = 1
+        AND role IN ('DFIR_MANAGER', 'INVESTIGATOR')
+      `, [userId], (err, row) => {
+            if (err)
+                reject(err);
+            else
+                resolve(row);
+        });
+    });
+}
+function reassignCase(params) {
+    return new Promise((resolve, reject) => {
+        db_1.db.run(`
+      UPDATE cases
+      SET
+        investigator = ?,
+        investigatorId = ?,
+        investigatorName = ?,
+        assignedByUserId = ?,
+        assignedByName = ?,
+        assignedAt = CURRENT_TIMESTAMP
+      WHERE id = ?
+      `, [
+            params.investigatorName,
+            params.investigatorId,
+            params.investigatorName,
+            params.assignedByUserId,
+            params.assignedByName,
+            params.caseId,
+        ], (err) => {
+            if (err)
+                reject(err);
+            else
+                resolve();
         });
     });
 }
