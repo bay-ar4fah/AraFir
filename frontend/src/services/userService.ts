@@ -106,3 +106,18 @@ export async function resetUserPassword(
     throw new Error("Failed to reset password");
   }
 }
+
+export async function getCaseAssignableUsers(): Promise<AppUser[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/users/case-assignable`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to load assignable users");
+  }
+
+  return response.json();
+}

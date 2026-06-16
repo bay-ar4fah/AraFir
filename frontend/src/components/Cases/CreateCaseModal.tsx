@@ -1,5 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import type { Case } from "../../types/case";
+import type { AppUser } from "../../types/user";
+
+import {
+  getCaseAssignableUsers,
+} from "../../services/userService";
 
 interface Props {
   onClose: () => void;
@@ -10,13 +16,52 @@ export default function CreateCaseModal({
   onClose,
   onCreate,
 }: Props) {
-  const [caseName, setCaseName] = useState("");
-  const [description, setDescription] = useState("");
-  const [investigator, setInvestigator] = useState("");
+  const [caseName, setCaseName] =
+    useState("");
+
+  const [description, setDescription] =
+    useState("");
+
+  const [investigator, setInvestigator] =
+    useState("");
+
+  const [assignableUsers, setAssignableUsers] =
+    useState<AppUser[]>([]);
+
+  const [isLoadingUsers, setIsLoadingUsers] =
+    useState(false);
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        setIsLoadingUsers(true);
+
+        const users =
+          await getCaseAssignableUsers();
+
+        setAssignableUsers(users);
+      } catch (err) {
+        console.error(err);
+
+        alert(
+          "Failed to load investigator list"
+        );
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    }
+
+    loadUsers();
+  }, []);
 
   const handleSubmit = () => {
-    if (!caseName || !investigator) {
-      alert("Case name and investigator are required");
+    if (!caseName.trim()) {
+      alert("Case name is required");
+      return;
+    }
+
+    if (!investigator) {
+      alert("Please select investigator");
       return;
     }
 
@@ -40,24 +85,56 @@ export default function CreateCaseModal({
         <div className="space-y-4">
           <input
             value={caseName}
-            onChange={(e) => setCaseName(e.target.value)}
+            onChange={(e) =>
+              setCaseName(e.target.value)
+            }
             placeholder="Case name"
             className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 outline-none"
           />
 
           <textarea
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) =>
+              setDescription(e.target.value)
+            }
             placeholder="Case description"
             className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 outline-none h-28"
           />
 
-          <input
-            value={investigator}
-            onChange={(e) => setInvestigator(e.target.value)}
-            placeholder="Lead investigator"
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 outline-none"
-          />
+          <div>
+            <label className="block text-sm text-zinc-400 mb-2">
+              Investigator
+            </label>
+
+            <select
+              value={investigator}
+              onChange={(e) =>
+                setInvestigator(
+                  e.target.value
+                )
+              }
+              disabled={isLoadingUsers}
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 outline-none"
+            >
+              <option value="">
+                {isLoadingUsers
+                  ? "Loading investigators..."
+                  : "Select investigator"}
+              </option>
+
+              {assignableUsers.map(
+                (user) => (
+                  <option
+                    key={user.id}
+                    value={user.name}
+                  >
+                    {user.name} (
+                    {user.role})
+                  </option>
+                )
+              )}
+            </select>
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 mt-6">
