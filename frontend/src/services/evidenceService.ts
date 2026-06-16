@@ -1,10 +1,14 @@
-import type { Evidence } from "../types/evidence";
 import { getAuthHeaders } from "./authService";
 
 const API_URL = "http://localhost:3001/api";
 
-export async function getEvidenceList(): Promise<Evidence[]> {
-  const response = await fetch(`${API_URL}/evidence`);
+export async function getEvidence() {
+  const response = await fetch(
+    `${API_URL}/evidence`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch evidence");
@@ -13,11 +17,17 @@ export async function getEvidenceList(): Promise<Evidence[]> {
   return response.json();
 }
 
+export async function getEvidenceList() {
+  return getEvidence();
+}
 export async function getEvidenceByCaseId(
   caseId: string
-): Promise<Evidence[]> {
+) {
   const response = await fetch(
-    `${API_URL}/cases/${caseId}/evidence`
+    `${API_URL}/cases/${caseId}/evidence`,
+    {
+      headers: getAuthHeaders(),
+    }
   );
 
   if (!response.ok) {
@@ -25,22 +35,6 @@ export async function getEvidenceByCaseId(
   }
 
   return response.json();
-}
-
-export async function saveEvidence(
-  evidence: Evidence
-): Promise<void> {
-  const response = await fetch(`${API_URL}/evidence`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(evidence),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to save evidence");
-  }
 }
 
 export async function excludeEvidence(params: {
@@ -61,9 +55,7 @@ export async function excludeEvidence(params: {
   );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to exclude evidence"
-    );
+    throw new Error("Failed to exclude evidence");
   }
 }
 
@@ -85,8 +77,6 @@ export async function restoreEvidence(
   );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to restore evidence"
-    );
+    throw new Error("Failed to restore evidence");
   }
 }

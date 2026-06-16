@@ -1,11 +1,12 @@
 import { getEvidenceList } from "./evidenceService";
 import { getCustodyLogs } from "./chainOfCustodyService";
+import type { Evidence } from "../types/evidence";
 
 export async function buildAttackGraph() {
   const evidence = await getEvidenceList();
   const logs = await getCustodyLogs();
 
-  const nodes = evidence.map((e) => ({
+  const nodes = evidence.map((e: Evidence) => ({
     id: e.id,
     data: {
       label: e.filename,
