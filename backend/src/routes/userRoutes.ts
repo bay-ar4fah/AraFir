@@ -7,6 +7,7 @@ import {
   disableUser,
   enableUser,
   resetPassword,
+  listCaseAssignableUsers,
 } from "../controllers/userController";
 
 import { requireAuth } from "../middleware/authMiddleware";
@@ -54,6 +55,13 @@ router.patch(
   requireAuth,
   requirePermission("user:manage"),
   resetPassword
+);
+
+router.get(
+  "/case-assignable",
+  requireAuth,
+  requirePermission("case:create"),
+  listCaseAssignableUsers
 );
 
 export default router;

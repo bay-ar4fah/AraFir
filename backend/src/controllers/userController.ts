@@ -8,6 +8,7 @@ import {
   updateUserRole,
   setUserActiveStatus,
   resetUserPassword,
+  getCaseAssignableUsers,
 } from "../services/userService";
 
 import { validatePasswordPolicy } from "../utils/passwordPolicy";
@@ -248,6 +249,23 @@ export async function resetPassword(
 
     return res.status(500).json({
       error: "Failed to reset password",
+    });
+  }
+}
+
+export async function listCaseAssignableUsers(
+  _req: Request,
+  res: Response
+) {
+  try {
+    const users = await getCaseAssignableUsers();
+
+    return res.json(users);
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      error: "Failed to load assignable users",
     });
   }
 }

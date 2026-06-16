@@ -196,3 +196,28 @@ export async function changeOwnPassword(params: {
     );
   });
 }
+export function getCaseAssignableUsers(): Promise<UserRow[]> {
+  return new Promise((resolve, reject) => {
+    db.all(
+      `
+      SELECT
+        id,
+        name,
+        email,
+        role,
+        is_active,
+        created_at,
+        updated_at
+      FROM users
+      WHERE is_active = 1
+        AND role IN ('DFIR_MANAGER', 'INVESTIGATOR')
+      ORDER BY role ASC, name ASC
+      `,
+      [],
+      (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows as UserRow[]);
+      }
+    );
+  });
+}
