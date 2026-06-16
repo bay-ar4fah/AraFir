@@ -9,5 +9,10 @@ export interface Case {
   description: string;
   createdAt: string;
   investigator: string;
-  status: CaseStatus;
+  investigatorId?: string;
+  investigatorName?: string;
+  assignedByUserId?: string;
+  assignedByName?: string;
+  assignedAt?: string;
+  status: string;
 }

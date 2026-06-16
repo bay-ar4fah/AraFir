@@ -22,7 +22,7 @@ export default function CreateCaseModal({
   const [description, setDescription] =
     useState("");
 
-  const [investigator, setInvestigator] =
+  const [investigatorId, setInvestigatorId] =
     useState("");
 
   const [assignableUsers, setAssignableUsers] =
@@ -60,16 +60,17 @@ export default function CreateCaseModal({
       return;
     }
 
-    if (!investigator) {
+    if (!investigatorId) {
       alert("Please select investigator");
       return;
     }
 
     onCreate({
       id: crypto.randomUUID(),
-      caseName,
-      description,
-      investigator,
+      caseName: caseName.trim(),
+      description: description.trim(),
+      investigator: "",
+      investigatorId,
       createdAt: new Date().toISOString(),
       status: "OPEN",
     });
@@ -107,9 +108,9 @@ export default function CreateCaseModal({
             </label>
 
             <select
-              value={investigator}
+              value={investigatorId}
               onChange={(e) =>
-                setInvestigator(
+                setInvestigatorId(
                   e.target.value
                 )
               }
@@ -122,17 +123,14 @@ export default function CreateCaseModal({
                   : "Select investigator"}
               </option>
 
-              {assignableUsers.map(
-                (user) => (
-                  <option
-                    key={user.id}
-                    value={user.name}
-                  >
-                    {user.name} (
-                    {user.role})
-                  </option>
-                )
-              )}
+              {assignableUsers.map((user) => (
+                <option
+                  key={user.id}
+                  value={user.id}
+                >
+                  {user.name} ({user.role})
+                </option>
+              ))}
             </select>
           </div>
         </div>

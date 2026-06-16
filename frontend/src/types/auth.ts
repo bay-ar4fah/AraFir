@@ -9,6 +9,7 @@ export type UserRole =
 export type Permission =
   | "case:create"
   | "case:read"
+  | "case:assign"
   | "case:update"
   | "case:delete"
   | "evidence:create"

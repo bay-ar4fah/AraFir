@@ -1,4 +1,5 @@
 import { getAuthHeaders } from "./authService";
+import type { CaseAssignmentLog } from "../types/caseAssignment";
 
 const API_URL = "http://localhost:3001/api";
 
@@ -74,4 +75,55 @@ export async function deleteCaseById(
       "Failed to delete case"
     );
   }
+}
+
+export async function reassignCase(params: {
+  caseId: string;
+  investigatorId: string;
+  reason: string;
+}): Promise<void> {
+  const response = await fetch(
+    `${API_URL}/cases/${params.caseId}/reassign`,
+    {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        investigatorId: params.investigatorId,
+        reason: params.reason,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+
+    throw new Error(
+      error?.error ||
+      error?.message ||
+      "Failed to reassign case"
+    );
+  }
+}
+
+export async function getCaseAssignmentLogs(
+  caseId: string
+): Promise<CaseAssignmentLog[]> {
+  const response = await fetch(
+    `${API_URL}/cases/${caseId}/assignments`,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+
+    throw new Error(
+      error?.error ||
+      error?.message ||
+      "Failed to load assignment history"
+    );
+  }
+
+  return response.json();
 }

@@ -10,8 +10,13 @@ import type { TimelineEvent } from "../../types/timeline";
 import type { MitreFinding } from "../../types/mitreFinding";
 import type { AttackStory } from "../../types/attackStory";
 import type { CustodyLog } from "../../types/custody";
+import type { CaseAssignmentLog } from "../../types/caseAssignment";
 
-import { getCaseById } from "../../services/caseService";
+import {
+  getCaseById,
+  reassignCase,
+  getCaseAssignmentLogs,
+} from "../../services/caseService";
 
 import {
   getEvidenceByCaseId,
@@ -39,20 +44,15 @@ import {
   uploadArtifact,
 } from "../../services/artifactService";
 
-import CaseTimelinePanel
-from "../../components/Timeline/CaseTimelinePanel";
+import CaseTimelinePanel from "../../components/Timeline/CaseTimelinePanel";
+import CaseMitrePanel from "../../components/Mitre/CaseMitrePanel";
+import AttackStoryPanel from "../../components/AttackStory/AttackStoryPanel";
+import EvidenceStatusBadge from "../../components/Evidence/EvidenceStatusBadge";
+import CaseCustodyPanel from "../../components/Custody/CaseCustodyPanel";
 
-import CaseMitrePanel
-from "../../components/Mitre/CaseMitrePanel";
-
-import AttackStoryPanel
-from "../../components/AttackStory/AttackStoryPanel";
-
-import EvidenceStatusBadge
-from "../../components/Evidence/EvidenceStatusBadge";
-
-import CaseCustodyPanel
-from "../../components/Custody/CaseCustodyPanel";
+import CaseAssignmentPanel from "../../components/Cases/CaseAssignmentPanel";
+import CaseAssignmentHistoryPanel from "../../components/Cases/CaseAssignmentHistoryPanel";
+import ReassignCaseModal from "../../components/Cases/ReassignCaseModal";
 
 import { formatFileSize } from "../../utils/fileUtils";
 
@@ -76,6 +76,12 @@ export default function CaseWorkspace() {
 
   const [custodyLogs, setCustodyLogs] =
     useState<CustodyLog[]>([]);
+
+  const [assignmentLogs, setAssignmentLogs] =
+    useState<CaseAssignmentLog[]>([]);
+
+  const [isReassignModalOpen, setIsReassignModalOpen] =
+    useState(false);
 
   const [isUploading, setIsUploading] =
     useState(false);
@@ -159,6 +165,15 @@ export default function CaseWorkspace() {
     setCustodyLogs(data);
   };
 
+  const loadAssignmentLogs = async (
+    activeCaseId: string
+  ) => {
+    const data =
+      await getCaseAssignmentLogs(activeCaseId);
+
+    setAssignmentLogs(data);
+  };
+
   const refreshCaseWorkspace = async (
     activeCaseId: string
   ) => {
@@ -168,6 +183,7 @@ export default function CaseWorkspace() {
       loadMitreFindings(activeCaseId),
       loadAttackStory(activeCaseId),
       loadCustodyLogs(activeCaseId),
+      loadAssignmentLogs(activeCaseId),
     ]);
   };
 
@@ -177,6 +193,35 @@ export default function CaseWorkspace() {
     getCaseById(caseId).then(setCaseData);
     refreshCaseWorkspace(caseId);
   }, [caseId]);
+
+  const handleReassignCase = async (
+    investigatorId: string,
+    reason: string
+  ) => {
+    if (!caseId) return;
+
+    try {
+      await reassignCase({
+        caseId,
+        investigatorId,
+        reason,
+      });
+
+      const updatedCase =
+        await getCaseById(caseId);
+
+      setCaseData(updatedCase);
+
+      await refreshCaseWorkspace(caseId);
+
+      setIsReassignModalOpen(false);
+
+      alert("Case reassigned successfully.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to reassign case.");
+    }
+  };
 
   const handleEvidenceUpload = async (
     files: FileList
@@ -202,76 +247,76 @@ export default function CaseWorkspace() {
   };
 
   const handleExcludeEvidence = async (
-  item: Evidence
-) => {
-  if (!caseId) return;
+    item: Evidence
+  ) => {
+    if (!caseId) return;
 
-  const reason = window.prompt(
-    `Reason for excluding ${item.filename}?`,
-    "Irrelevant or wrong evidence uploaded"
-  );
+    const reason = window.prompt(
+      `Reason for excluding ${item.filename}?`,
+      "Irrelevant or wrong evidence uploaded"
+    );
 
-  if (!reason || reason.trim().length === 0) {
-    alert("Exclude cancelled. Reason is required.");
-    return;
-  }
+    if (!reason || reason.trim().length === 0) {
+      alert("Exclude cancelled. Reason is required.");
+      return;
+    }
 
-  const confirmed = window.confirm(
-    `Exclude evidence "${item.filename}" from active analysis?`
-  );
+    const confirmed = window.confirm(
+      `Exclude evidence "${item.filename}" from active analysis?`
+    );
 
-  if (!confirmed) return;
+    if (!confirmed) return;
 
-  try {
-    setActiveEvidenceActionId(item.id);
+    try {
+      setActiveEvidenceActionId(item.id);
 
-    await excludeEvidence({
-      evidenceId:item.id,
-      caseId,
-      reason,
-    });
+      await excludeEvidence({
+        evidenceId: item.id,
+        caseId,
+        reason,
+      });
 
-    await refreshCaseWorkspace(caseId);
+      await refreshCaseWorkspace(caseId);
 
-    alert("Evidence excluded successfully.");
-  } catch (err) {
-    console.error(err);
-    alert("Failed to exclude evidence. Check backend logs.");
-  } finally {
-    setActiveEvidenceActionId(null);
-  }
-};
+      alert("Evidence excluded successfully.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to exclude evidence. Check backend logs.");
+    } finally {
+      setActiveEvidenceActionId(null);
+    }
+  };
 
-    const handleRestoreEvidence = async (
-      item: Evidence
-    ) => {
-      if (!caseId) return;
+  const handleRestoreEvidence = async (
+    item: Evidence
+  ) => {
+    if (!caseId) return;
 
-      const confirmed = window.confirm(
-        `Restore evidence "${item.filename}" back to active analysis?`
+    const confirmed = window.confirm(
+      `Restore evidence "${item.filename}" back to active analysis?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setActiveEvidenceActionId(item.id);
+
+      await restoreEvidence(
+        item.id,
+        caseId,
+        "Evidence restored to active analysis"
       );
 
-      if (!confirmed) return;
+      await refreshCaseWorkspace(caseId);
 
-      try {
-        setActiveEvidenceActionId(item.id);
-
-        await restoreEvidence(
-          item.id,
-          caseId,
-          "Evidence restored to active analysis"
-        );
-
-        await refreshCaseWorkspace(caseId);
-
-        alert("Evidence restored successfully.");
-      } catch (err) {
-        console.error(err);
-        alert("Failed to restore evidence. Check backend logs.");
-      } finally {
-        setActiveEvidenceActionId(null);
-      }
-    };
+      alert("Evidence restored successfully.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to restore evidence. Check backend logs.");
+    } finally {
+      setActiveEvidenceActionId(null);
+    }
+  };
 
   if (!caseData) {
     return (
@@ -283,7 +328,6 @@ export default function CaseWorkspace() {
 
   return (
     <div className="min-h-screen bg-zinc-950 p-6 space-y-6 text-white">
-
       <div className="bg-black border border-zinc-800 border-l-4 border-l-cyan-500 rounded-xl p-6 shadow-lg shadow-black/40">
         <div className="flex justify-between items-start gap-6">
           <div>
@@ -303,29 +347,14 @@ export default function CaseWorkspace() {
 
             <Link
               to={`/cases/${caseData.id}/graph`}
-              className="
-                px-4
-                py-2
-                rounded-lg
-                bg-cyan-600
-                hover:bg-cyan-700
-                text-sm
-              "
+              className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-sm"
             >
               View Attack Graph
             </Link>
 
             <button
               disabled
-              className="
-                px-4
-                py-2
-                rounded-lg
-                bg-zinc-800
-                text-zinc-500
-                cursor-not-allowed
-                text-sm
-              "
+              className="px-4 py-2 rounded-lg bg-zinc-800 text-zinc-500 cursor-not-allowed text-sm"
             >
               Generate Report
             </button>
@@ -339,7 +368,9 @@ export default function CaseWorkspace() {
             </p>
 
             <p>
-              {caseData.investigator}
+              {caseData.investigatorName ||
+                caseData.investigator ||
+                "-"}
             </p>
           </div>
 
@@ -366,6 +397,13 @@ export default function CaseWorkspace() {
           </div>
         </div>
       </div>
+
+      <CaseAssignmentPanel
+        forensicCase={caseData}
+        onReassignClick={() =>
+          setIsReassignModalOpen(true)
+        }
+      />
 
       <div className="grid grid-cols-5 gap-4">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
@@ -432,18 +470,11 @@ export default function CaseWorkspace() {
           </div>
 
           <label
-            className={`
-              px-4
-              py-2
-              rounded-lg
-              cursor-pointer
-              transition
-              ${
-                isUploading
-                  ? "bg-zinc-700 text-zinc-400"
-                  : "bg-cyan-600 hover:bg-cyan-700"
-              }
-            `}
+            className={`px-4 py-2 rounded-lg cursor-pointer transition ${
+              isUploading
+                ? "bg-zinc-700 text-zinc-400"
+                : "bg-cyan-600 hover:bg-cyan-700"
+            }`}
           >
             {isUploading
               ? "Importing..."
@@ -479,7 +510,8 @@ export default function CaseWorkspace() {
           </div>
 
           <span className="text-sm text-zinc-400">
-            {activeEvidence.length} active / {excludedEvidence.length} excluded
+            {activeEvidence.length} active /{" "}
+            {excludedEvidence.length} excluded
           </span>
         </div>
 
@@ -492,19 +524,11 @@ export default function CaseWorkspace() {
             {evidence.map((item) => (
               <div
                 key={item.id}
-                className={`
-                  border
-                  rounded-lg
-                  p-4
-                  bg-black
-                  hover:border-zinc-700
-                  transition
-                  ${
-                    item.status === "EXCLUDED"
-                      ? "border-red-500/30 opacity-75"
-                      : "border-zinc-800"
-                  }
-                `}
+                className={`border rounded-lg p-4 bg-black hover:border-zinc-700 transition ${
+                  item.status === "EXCLUDED"
+                    ? "border-red-500/30 opacity-75"
+                    : "border-zinc-800"
+                }`}
               >
                 <div className="flex justify-between items-start gap-4">
                   <div>
@@ -558,18 +582,7 @@ export default function CaseWorkspace() {
                       onClick={() =>
                         handleRestoreEvidence(item)
                       }
-                      className="
-                        px-3
-                        py-1
-                        rounded
-                        bg-green-500/10
-                        text-green-400
-                        border
-                        border-green-500/30
-                        hover:bg-green-500/20
-                        disabled:opacity-50
-                        disabled:cursor-not-allowed
-                      "
+                      className="px-3 py-1 rounded bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {activeEvidenceActionId === item.id
                         ? "Restoring..."
@@ -583,18 +596,7 @@ export default function CaseWorkspace() {
                       onClick={() =>
                         handleExcludeEvidence(item)
                       }
-                      className="
-                        px-3
-                        py-1
-                        rounded
-                        bg-red-500/10
-                        text-red-400
-                        border
-                        border-red-500/30
-                        hover:bg-red-500/20
-                        disabled:opacity-50
-                        disabled:cursor-not-allowed
-                      "
+                      className="px-3 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {activeEvidenceActionId === item.id
                         ? "Excluding..."
@@ -620,10 +622,25 @@ export default function CaseWorkspace() {
         story={attackStory}
       />
 
+      <CaseAssignmentHistoryPanel
+        logs={assignmentLogs}
+      />
+
       <CaseCustodyPanel
         logs={custodyLogs}
       />
 
+      {isReassignModalOpen && (
+        <ReassignCaseModal
+          currentInvestigatorId={
+            caseData.investigatorId
+          }
+          onClose={() =>
+            setIsReassignModalOpen(false)
+          }
+          onSubmit={handleReassignCase}
+        />
+      )}
     </div>
   );
 }
