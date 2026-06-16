@@ -10,6 +10,7 @@ export type Permission =
   | "case:create"
   | "case:read"
   | "case:update"
+  | "case:assign"
   | "case:delete"
   | "evidence:create"
   | "evidence:read"

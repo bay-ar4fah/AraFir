@@ -5,6 +5,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "case:create",
     "case:read",
     "case:update",
+    "case:assign",
     "case:delete",
     "evidence:create",
     "evidence:read",
@@ -21,6 +22,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "case:create",
     "case:read",
     "case:update",
+    "case:assign",
     "evidence:create",
     "evidence:read",
     "evidence:update",
@@ -33,7 +35,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   INVESTIGATOR: [
     "case:create",
     "case:read",
-    "case:update",
     "evidence:create",
     "evidence:read",
     "evidence:update",
