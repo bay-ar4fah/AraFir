@@ -7,13 +7,17 @@ import {
 import {
   uploadEvidenceFile,
 } from "../middleware/uploadMiddleware";
+import { requireAuth } from "../middleware/authMiddleware";
+import { requirePermission } from "../middleware/rbacMiddleware";
 
 const router = Router();
 
 router.post(
   "/cases/:caseId/artifacts",
   uploadEvidenceFile.single("file"),
-  uploadArtifact
+  uploadArtifact,
+  requireAuth,
+  requirePermission("evidence:create")
 );
 
 router.get(
