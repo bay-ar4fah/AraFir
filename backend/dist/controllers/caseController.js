@@ -8,6 +8,8 @@ exports.reassignCaseById = reassignCaseById;
 exports.listCaseAssignments = listCaseAssignments;
 const crypto_1 = require("crypto");
 const caseService_1 = require("../services/caseService");
+const auditService_1 = require("../services/auditService");
+const auditUtils_1 = require("../utils/auditUtils");
 const caseAssignmentService_1 = require("../services/caseAssignmentService");
 const caseService_2 = require("../services/caseService");
 async function listCases(_req, res) {
@@ -50,6 +52,33 @@ async function addCase(req, res) {
             assignedByUserId: req.user.id,
             assignedByName: req.user.name,
             status: "OPEN",
+        });
+        await (0, auditService_1.createAuditLog)({
+            ...(0, auditUtils_1.getAuditActor)(req),
+            action: "CASE_CREATED",
+            entityType: "CASE",
+            entityId: caseId,
+            entityName: caseName,
+            caseId,
+            message: "Case created successfully",
+            metadata: {
+                investigatorId: assignedUser.id,
+                investigatorName: assignedUser.name,
+            },
+        });
+        await (0, auditService_1.createAuditLog)({
+            ...(0, auditUtils_1.getAuditActor)(req),
+            action: "CASE_ASSIGNED",
+            entityType: "CASE",
+            entityId: caseId,
+            entityName: caseName,
+            caseId,
+            message: "Case assigned during creation",
+            metadata: {
+                assignedToUserId: assignedUser.id,
+                assignedToName: assignedUser.name,
+                assignedToRole: assignedUser.role,
+            },
         });
         await (0, caseAssignmentService_1.createCaseAssignmentLog)({
             caseId,
@@ -106,6 +135,14 @@ async function deleteCase(req, res) {
             });
         }
         await (0, caseService_1.deleteCaseCascade)(id);
+        await (0, auditService_1.createAuditLog)({
+            ...(0, auditUtils_1.getAuditActor)(req),
+            action: "CASE_DELETED",
+            entityType: "CASE",
+            entityId: id,
+            caseId: id,
+            message: "Case deleted successfully",
+        });
         return res.json({
             success: true,
             message: "Case deleted successfully",
@@ -160,6 +197,20 @@ async function reassignCaseById(req, res) {
             assignedByRole: req.user.role,
             action: "REASSIGNED",
             reason: reason || "Case reassigned",
+        });
+        await (0, auditService_1.createAuditLog)({
+            ...(0, auditUtils_1.getAuditActor)(req),
+            action: "CASE_REASSIGNED",
+            entityType: "CASE",
+            entityId: id,
+            caseId: id,
+            message: "Case reassigned successfully",
+            metadata: {
+                assignedToUserId: assignedUser.id,
+                assignedToName: assignedUser.name,
+                assignedToRole: assignedUser.role,
+                reason: reason || "Case reassigned",
+            },
         });
         return res.json({
             success: true,

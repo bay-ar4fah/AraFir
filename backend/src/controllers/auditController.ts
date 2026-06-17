@@ -11,11 +11,9 @@ export async function listAuditLogs(
 ) {
   try {
     const logs = await getAuditLogs();
-
     return res.json(logs);
   } catch (err) {
     console.error(err);
-
     return res.status(500).json({
       error: "Failed to load audit logs",
     });
@@ -41,7 +39,6 @@ export async function listAuditLogsByCase(
     return res.json(logs);
   } catch (err) {
     console.error(err);
-
     return res.status(500).json({
       error: "Failed to load case audit logs",
     });

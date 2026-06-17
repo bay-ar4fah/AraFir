@@ -93,25 +93,25 @@ function initDatabase() {
       )
     `);
         db_1.db.run(`
-    CREATE TABLE IF NOT EXISTS audit_logs (
-      id TEXT PRIMARY KEY,
-      actor_user_id TEXT,
-      actor_name TEXT,
-      actor_email TEXT,
-      actor_role TEXT,
-      action TEXT NOT NULL,
-      entity_type TEXT,
-      entity_id TEXT,
-      entity_name TEXT,
-      case_id TEXT,
-      ip_address TEXT,
-      user_agent TEXT,
-      status TEXT DEFAULT 'SUCCESS',
-      message TEXT,
-      metadata TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id TEXT PRIMARY KEY,
+        actor_user_id TEXT,
+        actor_name TEXT,
+        actor_email TEXT,
+        actor_role TEXT,
+        action TEXT NOT NULL,
+        entity_type TEXT,
+        entity_id TEXT,
+        entity_name TEXT,
+        case_id TEXT,
+        ip_address TEXT,
+        user_agent TEXT,
+        status TEXT DEFAULT 'SUCCESS',
+        message TEXT,
+        metadata TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
         db_1.db.run(`
       CREATE TABLE IF NOT EXISTS case_assignment_logs (
         id TEXT PRIMARY KEY,

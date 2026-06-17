@@ -85,6 +85,34 @@ export async function addCase(
       status: "OPEN",
     });
 
+    await createAuditLog({
+      ...getAuditActor(req),
+      action: "CASE_CREATED",
+      entityType: "CASE",
+      entityId: caseId,
+      entityName: caseName,
+      caseId,
+      message: "Case created successfully",
+      metadata: {
+        investigatorId: assignedUser.id,
+        investigatorName: assignedUser.name,
+      },
+    });
+
+    await createAuditLog({
+      ...getAuditActor(req),
+      action: "CASE_ASSIGNED",
+      entityType: "CASE",
+      entityId: caseId,
+      entityName: caseName,
+      caseId,
+      message: "Case assigned during creation",
+      metadata: {
+        assignedToUserId: assignedUser.id,
+        assignedToName: assignedUser.name,
+        assignedToRole: assignedUser.role,
+      },
+    });
     await createCaseAssignmentLog({
       caseId,
       assignedToUserId: assignedUser.id,
@@ -154,6 +182,14 @@ export async function deleteCase(
     }
 
     await deleteCaseCascade(id);
+    await createAuditLog({
+      ...getAuditActor(req),
+      action: "CASE_DELETED",
+      entityType: "CASE",
+      entityId: id,
+      caseId: id,
+      message: "Case deleted successfully",
+    });
 
     return res.json({
       success: true,
@@ -226,6 +262,21 @@ export async function reassignCaseById(
       reason: reason || "Case reassigned",
     });
 
+    await createAuditLog({
+      ...getAuditActor(req),
+      action: "CASE_REASSIGNED",
+      entityType: "CASE",
+      entityId: id,
+      caseId: id,
+      message: "Case reassigned successfully",
+      metadata: {
+        assignedToUserId: assignedUser.id,
+        assignedToName: assignedUser.name,
+        assignedToRole: assignedUser.role,
+        reason: reason || "Case reassigned",
+      },
+    });
+
     return res.json({
       success: true,
       message: "Case reassigned successfully",
@@ -237,7 +288,6 @@ export async function reassignCaseById(
       error: "Failed to reassign case",
     });
   }
-  
 }
 
 export async function listCaseAssignments(
