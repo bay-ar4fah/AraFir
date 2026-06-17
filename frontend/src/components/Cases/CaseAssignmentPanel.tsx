@@ -41,7 +41,16 @@ export default function CaseAssignmentPanel({
         </PermissionGuard>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mt-6 text-sm">
+      <div className="grid grid-cols-4 gap-4 mt-6 text-sm">
+        <div>
+          <p className="text-zinc-500">
+            Case ID
+          </p>
+
+          <p className="font-mono text-xs text-zinc-300 break-all">
+            {forensicCase.id}
+          </p>
+        </div>
         <div>
           <p className="text-zinc-500">
             Assigned Investigator

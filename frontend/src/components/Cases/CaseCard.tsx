@@ -43,6 +43,9 @@ export default function CaseCard({
             <h2 className="text-xl font-bold">
               {forensicCase.caseName}
             </h2>
+            <p className="text-xs text-zinc-500 mt-1 font-mono break-all">
+                ID: {forensicCase.id}
+              </p>
 
             <p className="text-sm text-zinc-400 mt-1">
               {forensicCase.description}

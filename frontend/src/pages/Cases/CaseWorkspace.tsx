@@ -334,6 +334,22 @@ export default function CaseWorkspace() {
             <h1 className="text-3xl font-bold">
               {caseData.caseName}
             </h1>
+            <div className="flex items-center gap-2 mt-2">
+              <p className="text-xs text-zinc-500 font-mono break-all">
+                Case ID: {caseData.id}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(caseData.id);
+                  alert("Case ID copied");
+                }}
+                className="text-xs px-2 py-1 rounded border border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800"
+              >
+                Copy
+              </button>
+            </div>
 
             <p className="text-zinc-400 mt-2">
               {caseData.description}
