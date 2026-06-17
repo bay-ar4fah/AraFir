@@ -1,16 +1,9 @@
-import {
-  getAuthHeaders,
-} from "./authService";
+import { getAuthHeaders } from "./authService";
+import type { AuditLog } from "../types/audit";
 
-import type {
-  AuditLog,
-} from "../types/audit";
+const API_BASE_URL = "http://localhost:3001/api";
 
-const API_BASE_URL =
-  "http://localhost:3001/api";
-
-export async function getAuditLogs():
-  Promise<AuditLog[]> {
+export async function getAuditLogs(): Promise<AuditLog[]> {
   const response = await fetch(
     `${API_BASE_URL}/audit-logs`,
     {
@@ -19,28 +12,7 @@ export async function getAuditLogs():
   );
 
   if (!response.ok) {
-    throw new Error(
-      "Failed to load audit logs"
-    );
-  }
-
-  return response.json();
-}
-
-export async function getAuditLogsByCaseId(
-  caseId: string
-): Promise<AuditLog[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/audit-logs/cases/${caseId}`,
-    {
-      headers: getAuthHeaders(),
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(
-      "Failed to load case audit logs"
-    );
+    throw new Error("Failed to load audit logs");
   }
 
   return response.json();

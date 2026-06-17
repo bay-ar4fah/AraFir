@@ -53,6 +53,7 @@ import CaseCustodyPanel from "../../components/Custody/CaseCustodyPanel";
 import CaseAssignmentPanel from "../../components/Cases/CaseAssignmentPanel";
 import CaseAssignmentHistoryPanel from "../../components/Cases/CaseAssignmentHistoryPanel";
 import ReassignCaseModal from "../../components/Cases/ReassignCaseModal";
+import PermissionGuard from "../../components/Auth/PermissionGuard";
 
 import { formatFileSize } from "../../utils/fileUtils";
 
@@ -473,45 +474,45 @@ export default function CaseWorkspace() {
         </div>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-md shadow-black/30">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold">
-              Evidence Ingestion
-            </h2>
+      <PermissionGuard permission="evidence:create">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-md shadow-black/30">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold">
+                Evidence Ingestion
+              </h2>
 
-            <p className="text-zinc-400 text-sm">
-              Import forensic artifacts into this active case.
-            </p>
+              <p className="text-zinc-400 text-sm">
+                Import forensic artifacts into this active case.
+              </p>
+            </div>
+
+            <label
+              className={`px-4 py-2 rounded-lg cursor-pointer transition ${
+                isUploading
+                  ? "bg-zinc-700 text-zinc-400"
+                  : "bg-cyan-600 hover:bg-cyan-700"
+              }`}
+            >
+              {isUploading ? "Importing..." : "Import Evidence"}
+
+              <input
+                type="file"
+                multiple
+                disabled={isUploading}
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files) {
+                    handleEvidenceUpload(e.target.files);
+                  }
+
+                  e.currentTarget.value = "";
+                }}
+              />
+            </label>
           </div>
-
-          <label
-            className={`px-4 py-2 rounded-lg cursor-pointer transition ${
-              isUploading
-                ? "bg-zinc-700 text-zinc-400"
-                : "bg-cyan-600 hover:bg-cyan-700"
-            }`}
-          >
-            {isUploading
-              ? "Importing..."
-              : "Import Evidence"}
-
-            <input
-              type="file"
-              multiple
-              disabled={isUploading}
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files) {
-                  handleEvidenceUpload(e.target.files);
-                }
-
-                e.currentTarget.value = "";
-              }}
-            />
-          </label>
         </div>
-      </div>
+      </PermissionGuard>
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-md shadow-black/30">
         <div className="flex items-center justify-between mb-4">
@@ -591,33 +592,37 @@ export default function CaseWorkspace() {
                   </span>
 
                   {item.status === "EXCLUDED" ? (
-                    <button
-                      disabled={
-                        activeEvidenceActionId === item.id
-                      }
-                      onClick={() =>
-                        handleRestoreEvidence(item)
-                      }
-                      className="px-3 py-1 rounded bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {activeEvidenceActionId === item.id
-                        ? "Restoring..."
-                        : "Restore"}
-                    </button>
+                    <PermissionGuard permission="evidence:restore">
+                      <button
+                        disabled={
+                          activeEvidenceActionId === item.id
+                        }
+                        onClick={() =>
+                          handleRestoreEvidence(item)
+                        }
+                        className="px-3 py-1 rounded bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {activeEvidenceActionId === item.id
+                          ? "Restoring..."
+                          : "Restore"}
+                      </button>
+                    </PermissionGuard>
                   ) : (
-                    <button
-                      disabled={
-                        activeEvidenceActionId === item.id
-                      }
-                      onClick={() =>
-                        handleExcludeEvidence(item)
-                      }
-                      className="px-3 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {activeEvidenceActionId === item.id
-                        ? "Excluding..."
-                        : "Exclude"}
-                    </button>
+                    <PermissionGuard permission="evidence:exclude">
+                      <button
+                        disabled={
+                          activeEvidenceActionId === item.id
+                        }
+                        onClick={() =>
+                          handleExcludeEvidence(item)
+                        }
+                        className="px-3 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {activeEvidenceActionId === item.id
+                          ? "Excluding..."
+                          : "Exclude"}
+                      </button>
+                    </PermissionGuard>
                   )}
                 </div>
               </div>

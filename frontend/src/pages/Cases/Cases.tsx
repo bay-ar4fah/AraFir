@@ -10,6 +10,8 @@ import {
   deleteCaseById,
 } from "../../services/caseService";
 
+import PermissionGuard from "../../components/Auth/PermissionGuard";
+
 export default function CasesPage() {
   const [cases, setCases] = useState<Case[]>([]);
   const [isModalOpen, setIsModalOpen] =
@@ -65,12 +67,14 @@ export default function CasesPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700"
-        >
-          + New Case
-        </button>
+        <PermissionGuard permission="case:create">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700"
+          >
+            + New Case
+          </button>
+        </PermissionGuard>
       </div>
 
       {cases.length === 0 ? (
