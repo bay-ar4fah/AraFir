@@ -81,11 +81,7 @@ function formatMetadata(metadata: string | null) {
   if (!metadata) return "-";
 
   try {
-    return JSON.stringify(
-      JSON.parse(metadata),
-      null,
-      2
-    );
+    return JSON.stringify(JSON.parse(metadata), null, 2);
   } catch {
     return metadata;
   }
@@ -381,10 +377,16 @@ export default function CaseWorkspace() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      <div className="border-b border-zinc-800 bg-gradient-to-b from-zinc-950 to-zinc-900/70">
+      <section className="border-b border-zinc-800 bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900/60">
         <div className="px-6 py-6">
           <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0">
+              <div className="mb-3 flex items-center gap-2 text-xs text-zinc-500">
+                <span>AraFir</span>
+                <span>/</span>
+                <span>Case Workspace</span>
+              </div>
+
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-4xl font-bold tracking-tight">
                   {caseData.caseName}
@@ -412,7 +414,7 @@ export default function CaseWorkspace() {
                 </button>
               </div>
 
-              <p className="mt-4 max-w-4xl text-sm text-zinc-400">
+              <p className="mt-4 max-w-4xl text-sm leading-6 text-zinc-400">
                 {caseData.description}
               </p>
             </div>
@@ -479,7 +481,7 @@ export default function CaseWorkspace() {
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
       <div className="grid gap-6 p-6 xl:grid-cols-[minmax(0,1fr)_400px]">
         <main className="min-w-0 space-y-6">

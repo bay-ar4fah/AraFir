@@ -11,7 +11,14 @@ import {
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
+
 import PermissionGuard from "../Auth/PermissionGuard";
+import { useAuth } from "../../context/AuthContext";
+
+import {
+  formatRoleLabel,
+  getInitials,
+} from "../../utils/roleUtils";
 
 const menu = [
   {
@@ -52,13 +59,40 @@ const menu = [
 ];
 
 export default function Sidebar() {
+  const { user } = useAuth();
+
+  const displayRole =
+    user?.roleLabel ||
+    formatRoleLabel(user?.role ?? "");
+
+  const initials =
+    getInitials(user?.name);
+
   return (
-    <aside className="w-64 bg-zinc-950 border-r border-zinc-800">
-      <div className="p-6 text-xl font-bold text-cyan-400">
-        AraFir
+    <aside className="h-screen w-64 bg-zinc-950 border-r border-zinc-800 flex flex-col">
+      <div className="px-5 py-5 border-b border-zinc-800">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl border border-cyan-500/40 bg-cyan-500/10 flex items-center justify-center text-cyan-400 font-bold">
+            A
+          </div>
+
+          <div>
+            <h1 className="text-lg font-bold tracking-wide text-white">
+              AraFir
+            </h1>
+
+            <p className="text-xs text-zinc-500">
+              DFIR Platform
+            </p>
+          </div>
+        </div>
       </div>
 
-      <nav className="space-y-2 px-3">
+      <nav className="flex-1 space-y-2 px-3 py-5 overflow-y-auto">
+        <p className="px-4 pb-2 text-xs font-semibold uppercase tracking-wider text-zinc-600">
+          Menu
+        </p>
+
         {menu.map((item) => (
           <NavLink
             key={item.name}
@@ -85,30 +119,36 @@ export default function Sidebar() {
           </NavLink>
         ))}
 
-        <PermissionGuard permission="user:manage">
-          <NavLink
-            to="/users"
-            className={({ isActive }) =>
-              `
-              flex
-              items-center
-              gap-3
-              px-4
-              py-3
-              rounded-lg
-              transition
-              ${
-                isActive
-                  ? "bg-cyan-600 text-white"
-                  : "hover:bg-zinc-900 text-zinc-300"
+        <div className="pt-4 mt-4 border-t border-zinc-800">
+          <p className="px-4 pb-2 text-xs font-semibold uppercase tracking-wider text-zinc-600">
+            Admin
+          </p>
+
+          <PermissionGuard permission="user:manage">
+            <NavLink
+              to="/users"
+              className={({ isActive }) =>
+                `
+                flex
+                items-center
+                gap-3
+                px-4
+                py-3
+                rounded-lg
+                transition
+                ${
+                  isActive
+                    ? "bg-cyan-600 text-white"
+                    : "hover:bg-zinc-900 text-zinc-300"
+                }
+                `
               }
-              `
-            }
-          >
-            <Users size={18} />
-            <span>User Management</span>
-          </NavLink>
-        </PermissionGuard>
+            >
+              <Users size={18} />
+              <span>User Management</span>
+            </NavLink>
+          </PermissionGuard>
+
           <PermissionGuard permission="audit:read">
             <NavLink
               to="/audit"
@@ -132,8 +172,27 @@ export default function Sidebar() {
               <ScrollText size={18} />
               <span>Audit Trail</span>
             </NavLink>
-        </PermissionGuard>
+          </PermissionGuard>
+        </div>
       </nav>
+
+      <div className="border-t border-zinc-800 p-4">
+        <div className="flex items-center gap-3 rounded-xl bg-zinc-900/70 p-3">
+          <div className="h-11 w-11 rounded-full border border-cyan-500/40 bg-cyan-500/10 flex items-center justify-center text-sm font-bold text-cyan-300">
+            {initials}
+          </div>
+
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-white">
+              {user?.name ?? "AraFir User"}
+            </p>
+
+            <p className="truncate text-xs text-cyan-400">
+              {displayRole}
+            </p>
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }
