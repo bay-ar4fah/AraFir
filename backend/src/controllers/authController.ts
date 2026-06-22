@@ -10,6 +10,8 @@ import {
   createAuditLog,
 } from "../services/auditService";
 
+import { formatRoleLabel } from "../utils/roleUtils";
+
 const JWT_SECRET =
   process.env.JWT_SECRET || "arafir_dev_secret_change_this";
 
@@ -161,14 +163,15 @@ export async function login(
     return res.json({
       token,
       user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        permissions: ROLE_PERMISSIONS[user.role],
-        mustChangePassword:
-          user.must_change_password === 1,
-      },
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          roleLabel: formatRoleLabel(user.role),
+          permissions: ROLE_PERMISSIONS[user.role],
+          mustChangePassword:
+            user.must_change_password === 1,
+        },
     });
   } catch (err) {
     console.error(err);

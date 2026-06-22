@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 import { db } from "../database/db";
 import type { AuthUser, UserRole } from "../types/auth";
 
+import { formatRoleLabel } from "../utils/roleUtils";
+
 const JWT_SECRET =
   process.env.JWT_SECRET || "arafir_dev_secret_change_this";
 
@@ -76,6 +78,7 @@ export async function requireAuth(
       name: user.name,
       email: user.email,
       role: user.role,
+      roleLabel: formatRoleLabel(user.role),
       mustChangePassword:
         user.must_change_password === 1,
     };
