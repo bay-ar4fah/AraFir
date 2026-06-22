@@ -16,6 +16,10 @@ import {
 import { requireAuth } from "../middleware/authMiddleware";
 import { requirePermission } from "../middleware/rbacMiddleware";
 
+import {
+  listCaseActivities,
+} from "../controllers/caseActivityController";
+
 const router = Router();
 
 router.get(
@@ -37,6 +41,13 @@ router.get(
   requireAuth,
   requirePermission("evidence:read"),
   listEvidenceByCase
+);
+
+router.get(
+  "/:caseId/activity",
+  requireAuth,
+  requirePermission("case:read"),
+  listCaseActivities
 );
 
 router.get(
