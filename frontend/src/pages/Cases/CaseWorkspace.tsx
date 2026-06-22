@@ -55,6 +55,17 @@ import CaseAssignmentHistoryPanel from "../../components/Cases/CaseAssignmentHis
 import ReassignCaseModal from "../../components/Cases/ReassignCaseModal";
 import PermissionGuard from "../../components/Auth/PermissionGuard";
 
+import type {
+  CaseActivityItem,
+} from "../../types/caseActivity";
+
+import {
+  getCaseActivities,
+} from "../../services/caseActivityService";
+
+import CaseActivityPanel
+from "../../components/Cases/CaseActivityPanel";
+
 import { formatFileSize } from "../../utils/fileUtils";
 
 export default function CaseWorkspace() {
@@ -185,6 +196,7 @@ export default function CaseWorkspace() {
       loadAttackStory(activeCaseId),
       loadCustodyLogs(activeCaseId),
       loadAssignmentLogs(activeCaseId),
+      loadActivities(activeCaseId),
     ]);
   };
 
@@ -318,6 +330,18 @@ export default function CaseWorkspace() {
       setActiveEvidenceActionId(null);
     }
   };
+
+  const [activities, setActivities] =
+  useState<CaseActivityItem[]>([]);
+
+  const loadActivities = async (
+      activeCaseId: string
+    ) => {
+      const data =
+        await getCaseActivities(activeCaseId);
+
+      setActivities(data);
+    };
 
   if (!caseData) {
     return (
@@ -645,6 +669,10 @@ export default function CaseWorkspace() {
 
       <CaseAssignmentHistoryPanel
         logs={assignmentLogs}
+      />
+
+      <CaseActivityPanel
+        activities={activities}
       />
 
       <CaseCustodyPanel
