@@ -39,6 +39,8 @@ import passwordRoutes from "./routes/passwordRoutes";
 
 import auditRoutes from "./routes/auditRoutes";
 
+import dashboardRoutes from "./routes/dashboardRoutes";
+
 initDatabase();
 
 setTimeout(() => {
@@ -145,6 +147,11 @@ app.use(
 app.use(
   "/api",
   custodyRoutes
+);
+
+app.use(
+  "/api/dashboard",
+  dashboardRoutes
 );
 
 app.listen(
