@@ -1,5 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
+
+import {
+  Upload,
+  Search,
+  SlidersHorizontal,
+  FileText,
+  UserRound,
+  CalendarDays,
+  Clock3,
+  CheckCircle2,
+  GitBranch,
+  Shield,
+  Activity,
+  Database,
+  MoreVertical,
+} from "lucide-react";
 
 import type { Case } from "../../types/case";
 import type { Evidence } from "../../types/evidence";
@@ -261,7 +278,6 @@ export default function CaseWorkspace() {
         await getCaseById(caseId);
 
       setCaseData(updatedCase);
-
       await refreshCaseWorkspace(caseId);
 
       setIsReassignModalOpen(false);
@@ -369,7 +385,7 @@ export default function CaseWorkspace() {
 
   if (!caseData) {
     return (
-      <div className="min-h-screen bg-zinc-950 p-6 text-zinc-400">
+      <div className="min-h-screen bg-zinc-950 p-5 text-sm text-zinc-400">
         Loading case...
       </div>
     );
@@ -378,26 +394,35 @@ export default function CaseWorkspace() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <section className="border-b border-zinc-800 bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900/60">
-        <div className="px-6 py-6">
-          <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+        <div className="mx-auto max-w-[1600px] px-5 py-5">
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(420px,760px)]">
             <div className="min-w-0">
-              <div className="mb-3 flex items-center gap-2 text-xs text-zinc-500">
-                <span>AraFir</span>
+              <div className="mb-2 flex items-center gap-2 text-xs text-zinc-500">
+                <Link
+                  to="/cases"
+                  className="hover:text-cyan-400"
+                >
+                  Cases
+                </Link>
+
                 <span>/</span>
-                <span>Case Workspace</span>
+
+                <span className="truncate">
+                  {caseData.caseName}
+                </span>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-4xl font-bold tracking-tight">
+                <h1 className="truncate text-2xl font-bold tracking-tight md:text-3xl">
                   {caseData.caseName}
                 </h1>
 
-                <span className="rounded-lg bg-green-500/20 px-4 py-1.5 text-sm font-semibold text-green-400">
+                <span className="rounded-lg bg-green-500/10 px-3 py-1 text-xs font-semibold text-green-400">
                   {caseData.status}
                 </span>
               </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 <p className="font-mono text-xs text-zinc-500">
                   Case ID: {caseData.id}
                 </p>
@@ -414,77 +439,104 @@ export default function CaseWorkspace() {
                 </button>
               </div>
 
-              <p className="mt-4 max-w-4xl text-sm leading-6 text-zinc-400">
+              <p className="mt-3 max-w-4xl text-sm leading-6 text-zinc-400">
                 {caseData.description}
               </p>
+
+              <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() =>
+                      setActiveTab(tab.id)
+                    }
+                    className={`rounded-lg px-4 py-2 text-xs font-medium transition ${
+                      activeTab === tab.id
+                        ? "bg-cyan-600 text-white shadow-lg shadow-cyan-500/10"
+                        : "border border-zinc-800 bg-black/30 text-zinc-400 hover:bg-zinc-900 hover:text-white"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="flex shrink-0 flex-wrap items-center gap-3">
-              <Link
-                to={`/cases/${caseData.id}/graph`}
-                className="rounded-xl bg-cyan-600 px-5 py-3 text-sm font-semibold hover:bg-cyan-700"
-              >
-                View Attack Graph
-              </Link>
+            <div className="space-y-4">
+              <div className="flex flex-wrap justify-start gap-3 xl:justify-end">
+                <Link
+                  to={`/cases/${caseData.id}/graph`}
+                  className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold hover:bg-cyan-700"
+                >
+                  <GitBranch size={16} />
+                  View Attack Graph
+                </Link>
 
-              <button
-                disabled
-                className="cursor-not-allowed rounded-xl bg-zinc-800 px-5 py-3 text-sm font-semibold text-zinc-500"
-              >
-                Generate Report
-              </button>
+                <button
+                  disabled
+                  className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-zinc-500"
+                >
+                  <FileText size={16} />
+                  Generate Report
+                </button>
+
+                <button className="rounded-xl border border-zinc-800 px-3 py-2.5 text-zinc-400 hover:bg-zinc-900">
+                  <MoreVertical size={18} />
+                </button>
+              </div>
+
+              <div className="grid rounded-2xl border border-zinc-800 bg-zinc-900/80 shadow-lg shadow-black/20 sm:grid-cols-2 xl:grid-cols-5">
+                <HeaderMetric
+                  icon={<Database size={14} />}
+                  label="Active Evidence"
+                  value={activeEvidence.length}
+                  accent="cyan"
+                />
+
+                <HeaderMetric
+                  icon={<CheckCircle2 size={14} />}
+                  label="Excluded"
+                  value={excludedEvidence.length}
+                  accent="green"
+                />
+
+                <HeaderMetric
+                  icon={<Activity size={14} />}
+                  label="Timeline Events"
+                  value={timeline.length}
+                  accent="cyan"
+                />
+
+                <HeaderMetric
+                  icon={<Shield size={14} />}
+                  label="MITRE Findings"
+                  value={mitreFindings.length}
+                  accent="purple"
+                />
+
+                <HeaderMetric
+                  icon={<Clock3 size={14} />}
+                  label="Last Import"
+                  value={
+                    lastImported === "-"
+                      ? "-"
+                      : new Date(lastImported).toLocaleDateString()
+                  }
+                  subValue={
+                    lastImported === "-"
+                      ? undefined
+                      : new Date(lastImported).toLocaleTimeString()
+                  }
+                  accent="yellow"
+                />
+              </div>
             </div>
-          </div>
-
-          <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-            <MetricTile
-              label="Active Evidence"
-              value={activeEvidence.length}
-            />
-
-            <MetricTile
-              label="Excluded"
-              value={excludedEvidence.length}
-            />
-
-            <MetricTile
-              label="Timeline Events"
-              value={timeline.length}
-            />
-
-            <MetricTile
-              label="MITRE Findings"
-              value={mitreFindings.length}
-              accent
-            />
-
-            <MetricTile
-              label="Last Import"
-              value={lastImported}
-              small
-            />
-          </div>
-
-          <div className="mt-6 flex gap-2 overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`rounded-xl px-5 py-3 text-sm font-medium transition ${
-                  activeTab === tab.id
-                    ? "bg-cyan-600 text-white shadow-lg shadow-cyan-500/10"
-                    : "border border-zinc-800 bg-black/30 text-zinc-400 hover:bg-zinc-900 hover:text-white"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
           </div>
         </div>
       </section>
 
-      <div className="grid gap-6 p-6 xl:grid-cols-[minmax(0,1fr)_400px]">
-        <main className="min-w-0 space-y-6">
+      <div className="mx-auto grid max-w-[1600px] gap-5 p-5 xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_390px]">
+        <main className="min-w-0 space-y-5">
           {activeTab === "overview" && (
             <>
               <CaseAssignmentPanel
@@ -551,7 +603,7 @@ export default function CaseWorkspace() {
           )}
         </main>
 
-        <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
+        <aside className="space-y-4 xl:sticky xl:top-5 xl:self-start">
           <CaseSummaryCard
             caseData={caseData}
           />
@@ -572,6 +624,10 @@ export default function CaseWorkspace() {
             custody={custodyLogs.length}
             activeSize={activeEvidenceSize}
           />
+
+          <p className="text-center text-xs text-zinc-500">
+            All times are displayed in your local time zone.
+          </p>
         </aside>
       </div>
 
@@ -599,32 +655,45 @@ export default function CaseWorkspace() {
   );
 }
 
-function MetricTile({
+function HeaderMetric({
+  icon,
   label,
   value,
-  accent = false,
-  small = false,
+  subValue,
+  accent,
 }: {
+  icon: ReactNode;
   label: string;
   value: string | number;
-  accent?: boolean;
-  small?: boolean;
+  subValue?: string;
+  accent: "cyan" | "green" | "purple" | "yellow";
 }) {
-  return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 p-4">
-      <p className="text-xs text-zinc-500">
-        {label}
-      </p>
+  const color = {
+    cyan: "text-cyan-400",
+    green: "text-green-400",
+    purple: "text-purple-400",
+    yellow: "text-yellow-400",
+  }[accent];
 
-      <p
-        className={`mt-2 font-bold ${
-          small
-            ? "text-sm leading-tight"
-            : "text-3xl"
-        } ${accent ? "text-cyan-400" : "text-white"}`}
-      >
+  return (
+    <div className="border-b border-zinc-800 p-4 sm:border-r sm:border-b-0 last:border-r-0">
+      <div className="flex items-center gap-2 text-xs text-zinc-400">
+        <span className={color}>
+          {icon}
+        </span>
+
+        {label}
+      </div>
+
+      <p className="mt-2 text-2xl font-bold leading-tight">
         {value}
       </p>
+
+      {subValue && (
+        <p className="text-xs text-zinc-500">
+          {subValue}
+        </p>
+      )}
     </div>
   );
 }
@@ -635,13 +704,10 @@ function CaseSummaryCard({
   caseData: Case;
 }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-lg shadow-black/20">
-      <h2 className="text-lg font-bold">
-        Case Summary
-      </h2>
-
-      <div className="mt-5 space-y-5 text-sm">
+    <SideCard title="Case Summary">
+      <div className="space-y-4">
         <SummaryRow
+          icon={<UserRound size={16} />}
           label="Investigator"
           value={
             caseData.investigatorName ||
@@ -651,6 +717,7 @@ function CaseSummaryCard({
         />
 
         <SummaryRow
+          icon={<CalendarDays size={16} />}
           label="Created"
           value={new Date(
             caseData.createdAt
@@ -658,11 +725,13 @@ function CaseSummaryCard({
         />
 
         <SummaryRow
+          icon={<UserRound size={16} />}
           label="Assigned By"
           value={caseData.assignedByName ?? "-"}
         />
 
         <SummaryRow
+          icon={<Clock3 size={16} />}
           label="Assigned At"
           value={
             caseData.assignedAt
@@ -674,36 +743,44 @@ function CaseSummaryCard({
         />
 
         <SummaryRow
+          icon={<CheckCircle2 size={16} />}
           label="Status"
           value={caseData.status}
           accent
         />
       </div>
-    </div>
+    </SideCard>
   );
 }
 
 function SummaryRow({
+  icon,
   label,
   value,
   accent = false,
 }: {
+  icon: ReactNode;
   label: string;
   value: string;
   accent?: boolean;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4">
-      <p className="text-zinc-500">
+    <div className="grid grid-cols-[20px_1fr_1.35fr] items-center gap-2 text-xs">
+      <span className="text-zinc-500">
+        {icon}
+      </span>
+
+      <p className="text-zinc-400">
         {label}
       </p>
 
       <p
-        className={`text-right font-medium ${
+        className={`truncate text-right font-medium ${
           accent
             ? "text-green-400"
             : "text-zinc-200"
         }`}
+        title={value}
       >
         {value}
       </p>
@@ -719,36 +796,35 @@ function QuickActionsCard({
   onReassign: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-lg shadow-black/20">
-      <h2 className="text-lg font-bold">
-        Quick Actions
-      </h2>
-
-      <div className="mt-5 grid grid-cols-1 gap-3">
+    <SideCard title="Quick Actions">
+      <div className="grid grid-cols-3 gap-3">
         <PermissionGuard permission="case:assign">
           <button
             onClick={onReassign}
-            className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm font-medium text-cyan-300 hover:bg-cyan-500/20"
+            className="flex flex-col items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-4 text-xs font-medium text-cyan-300 hover:bg-cyan-500/20"
           >
-            Reassign Case
+            <UserRound size={18} />
+            Reassign
           </button>
         </PermissionGuard>
 
         <Link
           to={`/cases/${caseData.id}/graph`}
-          className="rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-3 text-center text-sm font-medium text-purple-300 hover:bg-purple-500/20"
+          className="flex flex-col items-center justify-center gap-2 rounded-xl border border-purple-500/30 bg-purple-500/10 px-3 py-4 text-center text-xs font-medium text-purple-300 hover:bg-purple-500/20"
         >
-          View Attack Graph
+          <GitBranch size={18} />
+          Graph
         </Link>
 
         <button
           disabled
-          className="cursor-not-allowed rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 text-sm font-medium text-yellow-700"
+          className="flex cursor-not-allowed flex-col items-center justify-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-3 py-4 text-xs font-medium text-yellow-700"
         >
-          Generate Report
+          <FileText size={18} />
+          Report
         </button>
       </div>
-    </div>
+    </SideCard>
   );
 }
 
@@ -770,14 +846,10 @@ function QuickCountsCard({
   activeSize: number;
 }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-lg shadow-black/20">
-      <h2 className="text-lg font-bold">
-        Quick Counts
-      </h2>
-
-      <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+    <SideCard title="Quick Counts">
+      <div className="grid grid-cols-2 gap-3 text-xs">
         <MiniCount
-          label="Active"
+          label="Active Evidence"
           value={activeEvidence}
         />
 
@@ -787,12 +859,12 @@ function QuickCountsCard({
         />
 
         <MiniCount
-          label="Timeline"
+          label="Timeline Events"
           value={timeline}
         />
 
         <MiniCount
-          label="MITRE"
+          label="MITRE Findings"
           value={mitre}
           accent
         />
@@ -803,20 +875,38 @@ function QuickCountsCard({
         />
 
         <MiniCount
-          label="Custody"
+          label="Custody Logs"
           value={custody}
         />
       </div>
 
-      <div className="mt-4 rounded-xl border border-zinc-800 bg-black p-4">
+      <div className="mt-3 rounded-xl border border-zinc-800 bg-black/80 p-3">
         <p className="text-xs text-zinc-500">
           Active Evidence Size
         </p>
 
-        <p className="mt-1 text-xl font-bold">
+        <p className="mt-1 text-lg font-bold">
           {formatFileSize(activeSize)}
         </p>
       </div>
+    </SideCard>
+  );
+}
+
+function SideCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/20">
+      <h2 className="mb-4 text-base font-bold">
+        {title}
+      </h2>
+
+      {children}
     </div>
   );
 }
@@ -831,13 +921,13 @@ function MiniCount({
   accent?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-black p-4">
-      <p className="text-xs text-zinc-500">
+    <div className="rounded-xl border border-zinc-800 bg-black/80 p-3">
+      <p className="text-[11px] text-zinc-500">
         {label}
       </p>
 
       <p
-        className={`mt-1 text-2xl font-bold ${
+        className={`mt-1 text-lg font-bold ${
           accent ? "text-cyan-400" : "text-white"
         }`}
       >
@@ -861,25 +951,25 @@ function CaseActivityCompact({
     : activities.slice(0, 8);
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-lg shadow-black/20">
-      <div className="mb-5 flex items-start justify-between">
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/20">
+      <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold">
+          <h2 className="text-base font-bold">
             Case Activity Timeline
           </h2>
 
-          <p className="text-sm text-zinc-400">
+          <p className="text-xs text-zinc-400">
             Unified stream from audit, custody, assignment, and timeline events.
           </p>
         </div>
 
-        <span className="text-sm text-zinc-400">
+        <span className="text-xs text-zinc-400">
           {activities.length} events
         </span>
       </div>
 
       {visibleActivities.length === 0 ? (
-        <p className="text-sm text-zinc-400">
+        <p className="text-xs text-zinc-400">
           No activity found.
         </p>
       ) : (
@@ -890,36 +980,36 @@ function CaseActivityCompact({
               onClick={() =>
                 onSelectActivity(activity)
               }
-              className="w-full rounded-xl border border-zinc-800 bg-black p-4 text-left transition hover:border-cyan-600"
+              className="w-full rounded-xl border border-zinc-800 bg-black/80 p-3 text-left transition hover:border-cyan-600"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`rounded border px-2 py-1 text-xs ${getSourceClass(
+                      className={`rounded border px-2 py-1 text-[10px] ${getSourceClass(
                         activity.source
                       )}`}
                     >
                       {activity.source}
                     </span>
 
-                    <span className="text-sm font-semibold text-cyan-400">
+                    <span className="text-xs font-semibold text-cyan-400">
                       {activity.action}
                     </span>
                   </div>
 
-                  <p className="mt-2 truncate text-sm text-zinc-300">
+                  <p className="mt-2 truncate text-xs text-zinc-300">
                     {activity.message ||
                       activity.reason ||
                       "-"}
                   </p>
 
-                  <p className="mt-1 text-xs text-zinc-500">
+                  <p className="mt-1 text-[11px] text-zinc-500">
                     Actor: {activity.actorName ?? "System"}
                   </p>
                 </div>
 
-                <p className="shrink-0 text-xs text-zinc-500">
+                <p className="shrink-0 text-[11px] text-zinc-500">
                   {new Date(
                     activity.timestamp
                   ).toLocaleString()}
@@ -992,105 +1082,119 @@ function EvidenceWorkspace({
   }, [evidence, search, statusFilter]);
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-lg shadow-black/20">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div>
-            <h2 className="text-xl font-bold">
-              Evidence Repository
-            </h2>
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/20">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div>
+          <h2 className="text-base font-bold">
+            Evidence Repository
+          </h2>
 
-            <p className="text-sm text-zinc-400">
-              Active and excluded evidence linked to this investigation case.
-            </p>
-          </div>
-
-          <PermissionGuard permission="evidence:create">
-            <label
-              className={`rounded-xl px-5 py-3 text-sm font-semibold transition ${
-                isUploading
-                  ? "bg-zinc-700 text-zinc-400"
-                  : "cursor-pointer bg-cyan-600 hover:bg-cyan-700"
-              }`}
-            >
-              {isUploading
-                ? "Importing..."
-                : "Import Evidence"}
-
-              <input
-                type="file"
-                multiple
-                disabled={isUploading}
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files) {
-                    onUpload(e.target.files);
-                  }
-
-                  e.currentTarget.value = "";
-                }}
-              />
-            </label>
-          </PermissionGuard>
+          <p className="text-xs text-zinc-400">
+            Active and excluded evidence linked to this investigation case.
+          </p>
         </div>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-[auto_auto_1fr]">
-          <button
-            onClick={() =>
-              setStatusFilter("ACTIVE")
-            }
-            className={`rounded-xl px-4 py-2 text-sm ${
-              statusFilter === "ACTIVE"
-                ? "bg-cyan-600 text-white"
-                : "border border-zinc-800 text-zinc-400 hover:bg-zinc-800"
+        <PermissionGuard permission="evidence:create">
+          <label
+            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition ${
+              isUploading
+                ? "bg-zinc-700 text-zinc-400"
+                : "cursor-pointer bg-cyan-600 hover:bg-cyan-700"
             }`}
           >
-            Active ({activeEvidence.length})
-          </button>
+            <Upload size={15} />
+            {isUploading
+              ? "Importing..."
+              : "Import Evidence"}
 
-          <button
-            onClick={() =>
-              setStatusFilter("EXCLUDED")
-            }
-            className={`rounded-xl px-4 py-2 text-sm ${
-              statusFilter === "EXCLUDED"
-                ? "bg-red-600 text-white"
-                : "border border-zinc-800 text-zinc-400 hover:bg-zinc-800"
-            }`}
-          >
-            Excluded ({excludedEvidence.length})
-          </button>
+            <input
+              type="file"
+              multiple
+              disabled={isUploading}
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files) {
+                  onUpload(e.target.files);
+                }
+
+                e.currentTarget.value = "";
+              }}
+            />
+          </label>
+        </PermissionGuard>
+      </div>
+
+      <div className="mt-5 grid gap-3 lg:grid-cols-[auto_auto_minmax(220px,1fr)_auto_auto]">
+        <button
+          onClick={() =>
+            setStatusFilter("ACTIVE")
+          }
+          className={`rounded-lg px-4 py-2 text-xs ${
+            statusFilter === "ACTIVE"
+              ? "bg-cyan-600 text-white"
+              : "border border-zinc-800 text-zinc-400 hover:bg-zinc-800"
+          }`}
+        >
+          Active ({activeEvidence.length})
+        </button>
+
+        <button
+          onClick={() =>
+            setStatusFilter("EXCLUDED")
+          }
+          className={`rounded-lg px-4 py-2 text-xs ${
+            statusFilter === "EXCLUDED"
+              ? "bg-red-600 text-white"
+              : "border border-zinc-800 text-zinc-400 hover:bg-zinc-800"
+          }`}
+        >
+          Excluded ({excludedEvidence.length})
+        </button>
+
+        <div className="relative">
+          <Search
+            size={15}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
+          />
 
           <input
             value={search}
             onChange={(e) =>
               setSearch(e.target.value)
             }
-            placeholder="Search evidence by filename, SHA256, file type, or importer"
-            className="rounded-xl border border-zinc-800 bg-black px-4 py-2 text-sm outline-none focus:border-cyan-600"
+            placeholder="Search evidence..."
+            className="w-full rounded-lg border border-zinc-800 bg-black/80 py-2 pl-9 pr-3 text-xs outline-none focus:border-cyan-600"
           />
         </div>
 
-        {visibleEvidence.length === 0 ? (
-          <p className="mt-6 text-zinc-400">
-            No evidence found.
-          </p>
-        ) : (
-          <div className="mt-6 space-y-4">
-            {visibleEvidence.map((item) => (
-              <EvidenceCard
-                key={item.id}
-                item={item}
-                activeEvidenceActionId={
-                  activeEvidenceActionId
-                }
-                onExclude={onExclude}
-                onRestore={onRestore}
-              />
-            ))}
-          </div>
-        )}
+        <button className="rounded-lg border border-zinc-800 px-3 py-2 text-zinc-400 hover:bg-zinc-800">
+          <SlidersHorizontal size={15} />
+        </button>
+
+        <button className="rounded-lg border border-zinc-800 px-3 py-2 text-zinc-400 hover:bg-zinc-800">
+          <GitBranch size={15} />
+        </button>
       </div>
+
+      {visibleEvidence.length === 0 ? (
+        <p className="mt-5 text-xs text-zinc-400">
+          No evidence found.
+        </p>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {visibleEvidence.map((item) => (
+            <EvidenceCard
+              key={item.id}
+              item={item}
+              activeEvidenceActionId={
+                activeEvidenceActionId
+              }
+              onExclude={onExclude}
+              onRestore={onRestore}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1108,27 +1212,49 @@ function EvidenceCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border bg-black p-5 transition hover:border-zinc-700 ${
+      className={`overflow-hidden rounded-xl border bg-black/80 transition hover:border-zinc-700 ${
         item.status === "EXCLUDED"
           ? "border-red-500/30 opacity-80"
           : "border-zinc-800"
       }`}
     >
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-xs font-bold text-cyan-400">
-              {item.fileType}
+            <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-[10px] font-bold text-cyan-400">
+              <FileText size={24} />
+              <span className="mt-1 rounded bg-cyan-600 px-1.5 py-0.5 text-white">
+                {item.fileType}
+              </span>
             </div>
 
             <div className="min-w-0">
-              <p className="truncate text-lg font-bold">
+              <p className="truncate text-sm font-bold">
                 {item.filename}
               </p>
 
-              <p className="mt-1 break-all font-mono text-xs text-zinc-500">
+              <p className="mt-1 break-all font-mono text-[11px] text-zinc-500">
                 SHA256: {item.sha256}
               </p>
+
+              <div className="mt-3 grid gap-3 text-xs text-zinc-400 sm:grid-cols-3">
+                <InfoBlock
+                  label="Size"
+                  value={formatFileSize(item.size)}
+                />
+
+                <InfoBlock
+                  label="Imported By"
+                  value={item.importedBy}
+                />
+
+                <InfoBlock
+                  label="Imported"
+                  value={new Date(
+                    item.importedAt
+                  ).toLocaleString()}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -1138,47 +1264,17 @@ function EvidenceCard({
             status={item.status}
           />
 
-          <span className="rounded bg-zinc-800 px-2 py-1 text-xs text-cyan-400">
+          <span className="rounded bg-zinc-800 px-2 py-1 text-[11px] text-cyan-400">
             {item.fileType}
           </span>
+
+          <button className="rounded-lg px-2 py-1 text-zinc-400 hover:bg-zinc-800">
+            <MoreVertical size={16} />
+          </button>
         </div>
       </div>
 
-      <div className="mt-5 grid gap-4 border-t border-zinc-800 pt-4 text-xs text-zinc-400 md:grid-cols-3">
-        <div>
-          <p className="text-zinc-500">
-            Size
-          </p>
-
-          <p className="mt-1 text-zinc-200">
-            {formatFileSize(item.size)}
-          </p>
-        </div>
-
-        <div>
-          <p className="text-zinc-500">
-            Imported By
-          </p>
-
-          <p className="mt-1 text-zinc-200">
-            {item.importedBy}
-          </p>
-        </div>
-
-        <div>
-          <p className="text-zinc-500">
-            Imported
-          </p>
-
-          <p className="mt-1 text-zinc-200">
-            {new Date(
-              item.importedAt
-            ).toLocaleString()}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between border-t border-zinc-800 pt-4 text-xs">
+      <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-3 text-xs">
         <span className="text-green-400">
           Integrity Status: VERIFIED
         </span>
@@ -1192,7 +1288,7 @@ function EvidenceCard({
               onClick={() =>
                 onRestore(item)
               }
-              className="rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2 text-green-400 hover:bg-green-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-1.5 text-xs text-green-400 hover:bg-green-500/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {activeEvidenceActionId === item.id
                 ? "Restoring..."
@@ -1208,7 +1304,7 @@ function EvidenceCard({
               onClick={() =>
                 onExclude(item)
               }
-              className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-red-400 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {activeEvidenceActionId === item.id
                 ? "Excluding..."
@@ -1217,6 +1313,29 @@ function EvidenceCard({
           </PermissionGuard>
         )}
       </div>
+    </div>
+  );
+}
+
+function InfoBlock({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-zinc-500">
+        {label}
+      </p>
+
+      <p
+        className="truncate text-zinc-200"
+        title={value}
+      >
+        {value}
+      </p>
     </div>
   );
 }
