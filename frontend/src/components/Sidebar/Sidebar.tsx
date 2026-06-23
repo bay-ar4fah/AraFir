@@ -69,7 +69,7 @@ export default function Sidebar() {
     getInitials(user?.name);
 
   return (
-    <aside className="h-screen w-64 bg-zinc-950 border-r border-zinc-800 flex flex-col">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-zinc-950 border-r border-zinc-800 flex flex-col">
       <div className="px-5 py-5 border-b border-zinc-800">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl border border-cyan-500/40 bg-cyan-500/10 flex items-center justify-center text-cyan-400 font-bold">
@@ -88,7 +88,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-2 px-3 py-5 overflow-y-auto">
+      <nav className="flex-1 space-y-2 px-3 py-5 overflow-y-auto scrollbar-hide">
         <p className="px-4 pb-2 text-xs font-semibold uppercase tracking-wider text-zinc-600">
           Menu
         </p>
