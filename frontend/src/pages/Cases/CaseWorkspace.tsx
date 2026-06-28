@@ -443,7 +443,7 @@ export default function CaseWorkspace() {
                 {caseData.description}
               </p>
 
-              <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
+              <div className="mt-5 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
