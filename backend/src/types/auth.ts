@@ -23,6 +23,9 @@ export type Permission =
   | "finding:update"
   | "finding:delete"
   | "report:export"
+  | "attribution:read"
+  | "attribution:update"
+  | "attribution:review"
   | "audit:read"
   | "user:manage";
 

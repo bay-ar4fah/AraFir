@@ -20,7 +20,11 @@ export type AuditAction =
   | "PASSWORD_CHANGED"
   | "FINDING_CREATED"
   | "FINDING_UPDATED"
-  | "FINDING_DELETED";
+  | "FINDING_DELETED"
+  | "ATTRIBUTION_UPDATED"
+  | "ATTRIBUTION_HYPOTHESIS_CREATED"
+  | "ATTRIBUTION_HYPOTHESIS_UPDATED"
+  | "ATTRIBUTION_EVIDENCE_MATRIX_CREATED";
 
 export interface CreateAuditLogParams {
   actorUserId?: string | null;

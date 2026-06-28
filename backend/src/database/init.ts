@@ -187,6 +187,103 @@ export function initDatabase() {
         CREATE INDEX IF NOT EXISTS idx_findings_created_at
         ON findings(created_at)
       `);
+
+      db.run(`
+        CREATE TABLE IF NOT EXISTS attribution_assessments (
+          id TEXT PRIMARY KEY,
+          case_id TEXT NOT NULL UNIQUE,
+
+          threat_actor TEXT,
+          actor_aliases TEXT,
+          campaign_name TEXT,
+          motivation TEXT,
+          target_sector TEXT,
+
+          confidence TEXT NOT NULL DEFAULT 'LOW',
+          attribution_status TEXT NOT NULL DEFAULT 'DRAFT',
+
+          initial_access TEXT,
+          root_cause TEXT,
+          technical_root_cause TEXT,
+          business_root_cause TEXT,
+          process_root_cause TEXT,
+
+          attack_objective TEXT,
+          business_impact TEXT,
+          data_impact TEXT,
+          affected_assets TEXT,
+
+          supporting_summary TEXT,
+          contradicting_summary TEXT,
+          limitations TEXT,
+          final_assessment TEXT,
+          recommended_remediation TEXT,
+
+          created_by TEXT,
+          created_by_name TEXT,
+          updated_by TEXT,
+          updated_by_name TEXT,
+          reviewed_by TEXT,
+          reviewed_by_name TEXT,
+
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          reviewed_at TEXT,
+
+          FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE
+        )
+      `);
+
+      db.run(`
+        CREATE TABLE IF NOT EXISTS attribution_hypotheses (
+          id TEXT PRIMARY KEY,
+          case_id TEXT NOT NULL,
+          assessment_id TEXT NOT NULL,
+
+          title TEXT NOT NULL,
+          description TEXT,
+          status TEXT NOT NULL DEFAULT 'OPEN',
+          confidence TEXT NOT NULL DEFAULT 'LOW',
+
+          supporting_finding_ids TEXT,
+          contradicting_finding_ids TEXT,
+          notes TEXT,
+
+          created_by TEXT,
+          created_by_name TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+
+          FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE,
+          FOREIGN KEY (assessment_id) REFERENCES attribution_assessments(id) ON DELETE CASCADE
+        )
+      `);
+
+      db.run(`
+        CREATE TABLE IF NOT EXISTS attribution_evidence_matrix (
+          id TEXT PRIMARY KEY,
+          case_id TEXT NOT NULL,
+          assessment_id TEXT NOT NULL,
+
+          evidence_id TEXT,
+          finding_id TEXT,
+
+          reliability TEXT NOT NULL DEFAULT 'MEDIUM',
+          relevance TEXT NOT NULL DEFAULT 'MEDIUM',
+          weight INTEGER NOT NULL DEFAULT 3,
+          notes TEXT,
+
+          created_by TEXT,
+          created_by_name TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+
+          FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE,
+          FOREIGN KEY (assessment_id) REFERENCES attribution_assessments(id) ON DELETE CASCADE,
+          FOREIGN KEY (evidence_id) REFERENCES evidence(id) ON DELETE SET NULL,
+          FOREIGN KEY (finding_id) REFERENCES findings(id) ON DELETE SET NULL
+        )
+      `);
       
     console.log(
       "Database Initialized"

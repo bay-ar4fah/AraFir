@@ -43,6 +43,8 @@ import dashboardRoutes from "./routes/dashboardRoutes";
 
 import findingRoutes from "./routes/findingRoutes";
 
+import attributionRoutes from "./routes/attributionRoutes";
+
 initDatabase();
 
 setTimeout(() => {
@@ -149,6 +151,11 @@ app.use(
 app.use(
   "/api", 
   findingRoutes
+);
+
+app.use(
+  "/api", 
+  attributionRoutes
 );
 
 app.use(
