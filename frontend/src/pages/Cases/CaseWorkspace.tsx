@@ -74,6 +74,21 @@ import {
 
 import CaseFindingsPanel from "../../components/Findings/CaseFindingsPanel";
 
+import type {
+  AttributionWorkspace,
+  AttributionConfidence,
+  HypothesisStatus,
+} from "../../types/attribution";
+
+import {
+  createAttributionHypothesis,
+  getAttributionWorkspace,
+  updateAttributionAssessment,
+  updateAttributionHypothesis,
+} from "../../services/attributionService";
+
+import CaseAttributionPanel from "../../components/Attribution/CaseAttributionPanel";
+
 type WorkspaceTab =
   | "overview"
   | "evidence"
@@ -81,6 +96,7 @@ type WorkspaceTab =
   | "activity"
   | "timeline"
   | "mitre"
+  | "attribution"
   | "custody";
 
 const tabs: {
@@ -93,6 +109,7 @@ const tabs: {
   { id: "activity", label: "Activity" },
   { id: "timeline", label: "Timeline" },
   { id: "mitre", label: "MITRE" },
+  { id: "attribution", label: "Attribution" },
   { id: "custody", label: "Custody" },
 ];
 
@@ -142,6 +159,9 @@ export default function CaseWorkspace() {
 
   const [mitreFindings, setMitreFindings] =
     useState<MitreFinding[]>([]);
+
+  const [attributionWorkspace, setAttributionWorkspace] =
+    useState<AttributionWorkspace | null>(null);
 
   const [attackStory, setAttackStory] =
     useState<AttackStory | null>(null);
@@ -234,6 +254,15 @@ export default function CaseWorkspace() {
     setMitreFindings(data);
   };
 
+  const loadAttributionWorkspace = async (
+      activeCaseId: string
+    ) => {
+      const data =
+        await getAttributionWorkspace(activeCaseId);
+
+      setAttributionWorkspace(data);
+    };
+
   const loadAttackStory = async (
     activeCaseId: string
   ) => {
@@ -278,6 +307,7 @@ export default function CaseWorkspace() {
       loadTimeline(activeCaseId),
       loadFindings(activeCaseId),
       loadMitreFindings(activeCaseId),
+      loadAttributionWorkspace(activeCaseId),
       loadAttackStory(activeCaseId),
       loadCustodyLogs(activeCaseId),
       loadAssignmentLogs(activeCaseId),
@@ -461,6 +491,42 @@ const handleDeleteFinding = async (
       </div>
     );
   }
+
+const handleUpdateAttributionAssessment = async (
+  payload: Partial<AttributionWorkspace["assessment"]>
+) => {
+  if (!caseId) return;
+
+  await updateAttributionAssessment(caseId, payload);
+  await refreshCaseWorkspace(caseId);
+};
+
+const handleCreateAttributionHypothesis = async (
+  payload: {
+    assessmentId: string;
+    title: string;
+    description: string;
+    confidence: AttributionConfidence;
+  }
+) => {
+  if (!caseId) return;
+
+  await createAttributionHypothesis(caseId, payload);
+  await refreshCaseWorkspace(caseId);
+};
+
+const handleUpdateAttributionHypothesisStatus = async (
+  hypothesisId: string,
+  status: HypothesisStatus
+) => {
+  if (!caseId) return;
+
+  await updateAttributionHypothesis(hypothesisId, {
+    status,
+  });
+
+  await refreshCaseWorkspace(caseId);
+};
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -668,6 +734,27 @@ const handleDeleteFinding = async (
             <CaseMitrePanel
               findings={mitreFindings}
             />
+          )}
+
+          {activeTab === "attribution" && (
+            attributionWorkspace ? (
+              <CaseAttributionPanel
+                workspace={attributionWorkspace}
+                onUpdateAssessment={
+                  handleUpdateAttributionAssessment
+                }
+                onCreateHypothesis={
+                  handleCreateAttributionHypothesis
+                }
+                onUpdateHypothesisStatus={
+                  handleUpdateAttributionHypothesisStatus
+                }
+              />
+            ) : (
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 text-xs text-zinc-400">
+                Loading attribution workspace...
+              </div>
+            )
           )}
 
           {activeTab === "custody" && (
