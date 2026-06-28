@@ -5,20 +5,22 @@ export type AuditStatus =
 export type AuditAction =
   | "LOGIN_SUCCESS"
   | "LOGIN_FAILED"
-  | "USER_CREATED"
-  | "USER_ROLE_UPDATED"
-  | "USER_DISABLED"
-  | "USER_ENABLED"
-  | "USER_PASSWORD_RESET"
-  | "PASSWORD_CHANGED"
+  | "LOGOUT"
   | "CASE_CREATED"
-  | "CASE_ASSIGNED"
-  | "CASE_REASSIGNED"
+  | "CASE_UPDATED"
   | "CASE_DELETED"
+  | "CASE_REASSIGNED"
   | "EVIDENCE_UPLOADED"
   | "EVIDENCE_EXCLUDED"
   | "EVIDENCE_RESTORED"
-  | "REPORT_EXPORTED";
+  | "USER_CREATED"
+  | "USER_UPDATED"
+  | "USER_DEACTIVATED"
+  | "USER_ACTIVATED"
+  | "PASSWORD_CHANGED"
+  | "FINDING_CREATED"
+  | "FINDING_UPDATED"
+  | "FINDING_DELETED";
 
 export interface CreateAuditLogParams {
   actorUserId?: string | null;

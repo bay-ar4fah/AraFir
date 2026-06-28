@@ -41,6 +41,8 @@ import auditRoutes from "./routes/auditRoutes";
 
 import dashboardRoutes from "./routes/dashboardRoutes";
 
+import findingRoutes from "./routes/findingRoutes";
+
 initDatabase();
 
 setTimeout(() => {
@@ -142,6 +144,11 @@ app.use(
 app.use(
   "/api",
   attackStoryRoutes
+);
+
+app.use(
+  "/api", 
+  findingRoutes
 );
 
 app.use(

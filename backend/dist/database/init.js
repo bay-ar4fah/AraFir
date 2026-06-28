@@ -127,6 +127,54 @@ function initDatabase() {
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP
       )
     `);
+        db_1.db.run(`
+      CREATE TABLE IF NOT EXISTS findings (
+        id TEXT PRIMARY KEY,
+        case_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        severity TEXT NOT NULL DEFAULT 'MEDIUM',
+        confidence TEXT NOT NULL DEFAULT 'MEDIUM',
+        status TEXT NOT NULL DEFAULT 'OPEN',
+
+        evidence_id TEXT,
+        timeline_event_id TEXT,
+        mitre_finding_id TEXT,
+
+        technique_id TEXT,
+        tactic TEXT,
+
+        created_by TEXT NOT NULL,
+        created_by_name TEXT NOT NULL,
+        reviewed_by TEXT,
+        reviewed_by_name TEXT,
+
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        reviewed_at TEXT,
+
+        FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE,
+        FOREIGN KEY (evidence_id) REFERENCES evidence(id) ON DELETE SET NULL,
+        FOREIGN KEY (timeline_event_id) REFERENCES timeline_events(id) ON DELETE SET NULL,
+        FOREIGN KEY (mitre_finding_id) REFERENCES mitre_findings(id) ON DELETE SET NULL
+      )
+    `);
+        db_1.db.run(`
+        CREATE INDEX IF NOT EXISTS idx_findings_case_id
+        ON findings(case_id)
+      `);
+        db_1.db.run(`
+        CREATE INDEX IF NOT EXISTS idx_findings_status
+        ON findings(status)
+      `);
+        db_1.db.run(`
+        CREATE INDEX IF NOT EXISTS idx_findings_severity
+        ON findings(severity)
+      `);
+        db_1.db.run(`
+        CREATE INDEX IF NOT EXISTS idx_findings_created_at
+        ON findings(created_at)
+      `);
         console.log("Database Initialized");
     });
 }

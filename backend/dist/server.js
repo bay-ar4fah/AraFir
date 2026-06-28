@@ -21,6 +21,7 @@ const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const passwordRoutes_1 = __importDefault(require("./routes/passwordRoutes"));
 const auditRoutes_1 = __importDefault(require("./routes/auditRoutes"));
 const dashboardRoutes_1 = __importDefault(require("./routes/dashboardRoutes"));
+const findingRoutes_1 = __importDefault(require("./routes/findingRoutes"));
 (0, init_1.initDatabase)();
 setTimeout(() => {
     (0, userSeeder_1.seedDefaultAdmin)();
@@ -56,6 +57,7 @@ app.use("/api", artifactRoutes_1.default);
 app.use("/api", timelineRoutes_1.default);
 app.use("/api", mitreFindingRoutes_1.default);
 app.use("/api", attackStoryRoutes_1.default);
+app.use("/api", findingRoutes_1.default);
 app.use("/api", custodyRoutes_1.default);
 app.use("/api/dashboard", dashboardRoutes_1.default);
 app.listen(3001, () => {

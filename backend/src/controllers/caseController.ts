@@ -101,7 +101,7 @@ export async function addCase(
 
     await createAuditLog({
       ...getAuditActor(req),
-      action: "CASE_ASSIGNED",
+      action: "CASE_REASSIGNED",
       entityType: "CASE",
       entityId: caseId,
       entityName: caseName,

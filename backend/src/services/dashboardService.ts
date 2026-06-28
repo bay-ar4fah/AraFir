@@ -94,7 +94,7 @@ export async function getInvestigationDashboard():
           'Forensic Finding'
         ) as title,
         mf.severity,
-        COALESCE(e.filename, 'MITRE Finding') as source,
+        COALESCE(e.filename, 'Finding') as source,
         mf.createdAt
       FROM mitre_findings mf
       LEFT JOIN cases c ON c.id = mf.caseId

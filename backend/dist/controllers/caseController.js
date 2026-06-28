@@ -68,7 +68,7 @@ async function addCase(req, res) {
         });
         await (0, auditService_1.createAuditLog)({
             ...(0, auditUtils_1.getAuditActor)(req),
-            action: "CASE_ASSIGNED",
+            action: "CASE_REASSIGNED",
             entityType: "CASE",
             entityId: caseId,
             entityName: caseName,
