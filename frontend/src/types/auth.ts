@@ -18,6 +18,10 @@ export type Permission =
   | "evidence:exclude"
   | "evidence:restore"
   | "evidence:delete"
+  | "finding:read"
+  | "finding:create"
+  | "finding:update"
+  | "finding:delete"
   | "report:export"
   | "audit:read"
   | "user:manage";

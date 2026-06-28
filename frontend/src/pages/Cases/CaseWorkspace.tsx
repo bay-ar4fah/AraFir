@@ -58,9 +58,26 @@ import PermissionGuard from "../../components/Auth/PermissionGuard";
 
 import { formatFileSize } from "../../utils/fileUtils";
 
+import type {
+  Finding,
+  FindingConfidence,
+  FindingSeverity,
+  FindingStatus,
+} from "../../types/finding";
+
+import {
+  createFinding,
+  deleteFindingById,
+  getFindingsByCaseId,
+  updateFinding,
+} from "../../services/findingService";
+
+import CaseFindingsPanel from "../../components/Findings/CaseFindingsPanel";
+
 type WorkspaceTab =
   | "overview"
   | "evidence"
+  | "findings"
   | "activity"
   | "timeline"
   | "mitre"
@@ -72,6 +89,7 @@ const tabs: {
 }[] = [
   { id: "overview", label: "Overview" },
   { id: "evidence", label: "Evidence" },
+  { id: "findings", label: "Findings" },
   { id: "activity", label: "Activity" },
   { id: "timeline", label: "Timeline" },
   { id: "mitre", label: "MITRE" },
@@ -115,6 +133,9 @@ export default function CaseWorkspace() {
 
   const [evidence, setEvidence] =
     useState<Evidence[]>([]);
+
+  const [findings, setFindings] =
+    useState<Finding[]>([]);
 
   const [timeline, setTimeline] =
     useState<TimelineEvent[]>([]);
@@ -186,6 +207,15 @@ export default function CaseWorkspace() {
     setEvidence(data);
   };
 
+  const loadFindings = async (
+    activeCaseId: string
+  ) => {
+    const data =
+      await getFindingsByCaseId(activeCaseId);
+
+    setFindings(data);
+  };
+
   const loadTimeline = async (
     activeCaseId: string
   ) => {
@@ -246,6 +276,7 @@ export default function CaseWorkspace() {
     await Promise.all([
       loadEvidence(activeCaseId),
       loadTimeline(activeCaseId),
+      loadFindings(activeCaseId),
       loadMitreFindings(activeCaseId),
       loadAttackStory(activeCaseId),
       loadCustodyLogs(activeCaseId),
@@ -381,6 +412,46 @@ export default function CaseWorkspace() {
     } finally {
       setActiveEvidenceActionId(null);
     }
+  };
+
+    const handleCreateFinding = async (payload: {
+  title: string;
+  description: string;
+  severity: FindingSeverity;
+  confidence: FindingConfidence;
+}) => {
+  if (!caseId) return;
+
+  await createFinding(caseId, payload);
+  await refreshCaseWorkspace(caseId);
+};
+
+const handleUpdateFindingStatus = async (
+  finding: Finding,
+  status: FindingStatus
+) => {
+  if (!caseId) return;
+
+  await updateFinding(finding.id, {
+    status,
+  });
+
+  await refreshCaseWorkspace(caseId);
+};
+
+const handleDeleteFinding = async (
+    finding: Finding
+  ) => {
+    if (!caseId) return;
+
+    const confirmed = window.confirm(
+      `Delete finding "${finding.title}"?`
+    );
+
+    if (!confirmed) return;
+
+    await deleteFindingById(finding.id);
+    await refreshCaseWorkspace(caseId);
   };
 
   if (!caseData) {
@@ -570,6 +641,15 @@ export default function CaseWorkspace() {
             />
           )}
 
+          {activeTab === "findings" && (
+            <CaseFindingsPanel
+              findings={findings}
+              onCreate={handleCreateFinding}
+              onUpdateStatus={handleUpdateFindingStatus}
+              onDelete={handleDeleteFinding}
+            />
+          )}
+
           {activeTab === "activity" && (
             <CaseActivityCompact
               activities={activities}
@@ -619,6 +699,7 @@ export default function CaseWorkspace() {
             activeEvidence={activeEvidence.length}
             excludedEvidence={excludedEvidence.length}
             timeline={timeline.length}
+            findings={findings.length}
             mitre={mitreFindings.length}
             activities={activities.length}
             custody={custodyLogs.length}
@@ -832,6 +913,7 @@ function QuickCountsCard({
   activeEvidence,
   excludedEvidence,
   timeline,
+  findings,
   mitre,
   activities,
   custody,
@@ -840,6 +922,7 @@ function QuickCountsCard({
   activeEvidence: number;
   excludedEvidence: number;
   timeline: number;
+  findings:number;
   mitre: number;
   activities: number;
   custody: number;
@@ -857,10 +940,13 @@ function QuickCountsCard({
           label="Excluded"
           value={excludedEvidence}
         />
-
         <MiniCount
           label="Timeline Events"
           value={timeline}
+        />
+        <MiniCount
+          label="Findings"
+          value={findings}
         />
 
         <MiniCount
