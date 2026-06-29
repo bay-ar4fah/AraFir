@@ -211,6 +211,79 @@ async function tableExists(
           "Missing post-incident lessons learned documentation",
       }));
 
+  let capaMetrics = {
+  open: 0,
+  inProgress: 0,
+  pendingVerification: 0,
+  verified: 0,
+  rejected: 0,
+  overdue: 0,
+};
+
+let rootCauseSummary: {
+  category: string;
+  count: number;
+}[] = [];
+
+if (await tableExists("capa_actions")) {
+  const capaRows = await dbAll<{
+    status: string;
+    count: number;
+  }>(`
+    SELECT status, COUNT(*) as count
+    FROM capa_actions
+    GROUP BY status
+  `);
+
+  capaMetrics = {
+    open:
+      capaRows.find((item) => item.status === "OPEN")
+        ?.count ?? 0,
+    inProgress:
+      capaRows.find(
+        (item) => item.status === "IN_PROGRESS"
+      )?.count ?? 0,
+    pendingVerification:
+      capaRows.find(
+        (item) =>
+          item.status === "PENDING_VERIFICATION"
+      )?.count ?? 0,
+    verified:
+      capaRows.find(
+        (item) => item.status === "VERIFIED"
+      )?.count ?? 0,
+    rejected:
+      capaRows.find(
+        (item) => item.status === "REJECTED"
+      )?.count ?? 0,
+    overdue: 0,
+  };
+
+  const overdue = await dbGet<{ count: number }>(`
+    SELECT COUNT(*) as count
+    FROM capa_actions
+    WHERE due_date IS NOT NULL
+      AND due_date < date('now')
+      AND status != 'VERIFIED'
+  `);
+
+  capaMetrics.overdue = overdue.count;
+}
+
+if (await tableExists("lessons_learned")) {
+  rootCauseSummary = await dbAll<{
+    category: string;
+    count: number;
+  }>(`
+    SELECT
+      COALESCE(root_cause_category, 'UNKNOWN') as category,
+      COUNT(*) as count
+    FROM lessons_learned
+    GROUP BY root_cause_category
+    ORDER BY count DESC
+    LIMIT 6
+  `);
+}
   return {
     metrics: {
       openCases: openCases.count,
@@ -231,5 +304,7 @@ async function tableExists(
       reported: 0,
     },
     lessonsPending,
+    capaMetrics,
+    rootCauseSummary,
   };
 }
