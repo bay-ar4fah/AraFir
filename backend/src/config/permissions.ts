@@ -20,6 +20,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "attribution:read",
     "attribution:update",
     "attribution:review",
+    "lessons:read",
+    "lessons:update",
+    "lessons:review",
     "report:export",
     "audit:read",
     "user:manage",
@@ -42,6 +45,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "attribution:read",
     "attribution:update",
     "attribution:review",
+    "lessons:read",
+    "lessons:update",
+    "lessons:review",
     "report:export",
     "audit:read",
   ],
@@ -59,6 +65,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "finding:update",
     "attribution:read",
     "attribution:update",
+    "lessons:read",
+    "lessons:update",
     "report:export",
   ],
 
@@ -70,6 +78,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "finding:update",
     "attribution:read",
     "attribution:update",
+    "lessons:read",
+    "lessons:update",
     "report:export",
   ],
 
@@ -79,6 +89,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "finding:read",
     "attribution:read",
     "report:export",
+    "lessons:read",
     "audit:read",
   ],
 
@@ -87,5 +98,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "evidence:read",
     "finding:read",
     "attribution:read",
+    "lessons:read",
   ],
 };

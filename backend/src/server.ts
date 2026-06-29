@@ -45,6 +45,8 @@ import findingRoutes from "./routes/findingRoutes";
 
 import attributionRoutes from "./routes/attributionRoutes";
 
+import lessonsLearnedRoutes from "./routes/lessonsLearnedRoutes";
+
 initDatabase();
 
 setTimeout(() => {
@@ -166,6 +168,11 @@ app.use(
 app.use(
   "/api/dashboard",
   dashboardRoutes
+);
+
+app.use(
+  "/api", 
+  lessonsLearnedRoutes
 );
 
 app.listen(

@@ -284,7 +284,99 @@ export function initDatabase() {
           FOREIGN KEY (finding_id) REFERENCES findings(id) ON DELETE SET NULL
         )
       `);
+
+      db.run(`
+    CREATE TABLE IF NOT EXISTS lessons_learned (
+      id TEXT PRIMARY KEY,
+      case_id TEXT NOT NULL UNIQUE,
+
+      incident_summary TEXT,
+      what_happened TEXT,
+      why_it_happened TEXT,
+      what_worked TEXT,
+      what_failed TEXT,
+      business_impact TEXT,
+      technical_impact TEXT,
+
+      root_cause_category TEXT,
+      root_cause_summary TEXT,
+      control_gap_summary TEXT,
+
+      overall_status TEXT NOT NULL DEFAULT 'DRAFT',
+
+      created_by TEXT,
+      created_by_name TEXT,
+      updated_by TEXT,
+      updated_by_name TEXT,
+      reviewed_by TEXT,
+      reviewed_by_name TEXT,
+
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      reviewed_at TEXT,
+
+      FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE
+    )
+  `);
+
+    db.run(`
+    CREATE TABLE IF NOT EXISTS capa_actions (
+      id TEXT PRIMARY KEY,
+      case_id TEXT NOT NULL,
+      lessons_learned_id TEXT NOT NULL,
+
+      action_type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      priority TEXT NOT NULL DEFAULT 'MEDIUM',
+      status TEXT NOT NULL DEFAULT 'OPEN',
+
+      owner_team TEXT,
+      owner_name TEXT,
+      due_date TEXT,
+      completed_at TEXT,
+      verified_at TEXT,
+
+      verification_notes TEXT,
+      linked_finding_id TEXT,
+      linked_evidence_id TEXT,
+
+      created_by TEXT,
+      created_by_name TEXT,
+      updated_by TEXT,
+      updated_by_name TEXT,
+      verified_by TEXT,
+      verified_by_name TEXT,
+
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+
+      FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE,
+      FOREIGN KEY (lessons_learned_id) REFERENCES lessons_learned(id) ON DELETE CASCADE,
+      FOREIGN KEY (linked_finding_id) REFERENCES findings(id) ON DELETE SET NULL,
+      FOREIGN KEY (linked_evidence_id) REFERENCES evidence(id) ON DELETE SET NULL
+    )
+  `);
       
+  db.run(`
+      CREATE INDEX IF NOT EXISTS idx_lessons_learned_case_id
+      ON lessons_learned(case_id)
+    `);
+
+    db.run(`
+      CREATE INDEX IF NOT EXISTS idx_capa_actions_case_id
+      ON capa_actions(case_id)
+    `);
+
+    db.run(`
+      CREATE INDEX IF NOT EXISTS idx_capa_actions_status
+      ON capa_actions(status)
+    `);
+
+    db.run(`
+      CREATE INDEX IF NOT EXISTS idx_capa_actions_due_date
+      ON capa_actions(due_date)
+    `);
     console.log(
       "Database Initialized"
     );
