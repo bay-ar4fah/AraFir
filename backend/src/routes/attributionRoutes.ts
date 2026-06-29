@@ -16,6 +16,11 @@ import {
   requirePermission,
 } from "../middleware/rbacMiddleware";
 
+import {
+  getCaseAttributionSummary,
+  getCaseCardsAttributionSummary,
+} from "../controllers/attributionProjectionController";
+
 const router = Router();
 
 router.get(
@@ -51,6 +56,20 @@ router.post(
   requireAuth,
   requirePermission("attribution:update"),
   createCaseEvidenceMatrixItem
+);
+
+router.get(
+  "/cases/:caseId/attribution/summary",
+  requireAuth,
+  requirePermission("attribution:read"),
+  getCaseAttributionSummary
+);
+
+router.get(
+  "/cases-attribution-summary",
+  requireAuth,
+  requirePermission("case:read"),
+  getCaseCardsAttributionSummary
 );
 
 export default router;

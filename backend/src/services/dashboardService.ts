@@ -142,40 +142,63 @@ export async function getInvestigationDashboard():
   const analyzedEvidence =
     Math.max(0, importedEvidence - excludedEvidence.count);
 
-  const attributionSummary = [
-    {
-      actor: "Black Basta",
-      confidence: "HIGH" as const,
-      supportingFindings: activeFindings.count,
-      evidenceItems: importedEvidence,
-      lastUpdated:
-        activeInvestigations[0]?.updatedAt ?? null,
-    },
-    {
-      actor: "LockBit",
-      confidence: "MEDIUM" as const,
-      supportingFindings: Math.floor(
-        activeFindings.count / 2
-      ),
-      evidenceItems: Math.floor(
-        importedEvidence / 2
-      ),
-      lastUpdated:
-        activeInvestigations[1]?.updatedAt ?? null,
-    },
-    {
-      actor: "Unknown Actor",
-      confidence: "LOW" as const,
-      supportingFindings: Math.floor(
-        activeFindings.count / 3
-      ),
-      evidenceItems: Math.floor(
-        importedEvidence / 3
-      ),
-      lastUpdated:
-        activeInvestigations[2]?.updatedAt ?? null,
-    },
-  ];
+  let attributionSummary = [
+  {
+    actor: "Unknown Actor",
+    confidence: "LOW" as const,
+    supportingFindings: activeFindings.count,
+    evidenceItems: importedEvidence,
+    lastUpdated:
+      activeInvestigations[0]?.updatedAt ?? null,
+  },
+];
+
+if (
+  await tableExists(
+    "attribution_assessments"
+  )
+) {
+  attributionSummary =
+    await dbAll(`
+      SELECT
+        COALESCE(
+          threat_actor,
+          campaign_name,
+          'Unknown Actor'
+        ) as actor,
+        confidence,
+        (
+          SELECT COUNT(*)
+          FROM findings f
+          WHERE f.case_id = aa.case_id
+        ) as supportingFindings,
+        (
+          SELECT COUNT(*)
+          FROM evidence e
+          WHERE e.caseId = aa.case_id
+        ) as evidenceItems,
+        updated_at as lastUpdated
+      FROM attribution_assessments aa
+      ORDER BY updated_at DESC
+      LIMIT 5
+    `);
+}
+
+async function tableExists(
+  tableName: string
+): Promise<boolean> {
+  const row = await dbGet<{ count: number }>(
+    `
+    SELECT COUNT(*) as count
+    FROM sqlite_master
+    WHERE type = 'table'
+      AND name = ?
+    `,
+    [tableName]
+  );
+
+  return row.count > 0;
+}
 
   const lessonsPending =
     activeInvestigations
