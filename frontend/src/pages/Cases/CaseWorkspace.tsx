@@ -497,8 +497,17 @@ const handleUpdateAttributionAssessment = async (
 ) => {
   if (!caseId) return;
 
-  await updateAttributionAssessment(caseId, payload);
-  await refreshCaseWorkspace(caseId);
+  try {
+    await updateAttributionAssessment(caseId, payload);
+
+    await refreshCaseWorkspace(caseId);
+
+    alert("Attribution assessment saved successfully.");
+  } catch (err) {
+    console.error(err);
+
+    alert("Failed to save attribution assessment.");
+  }
 };
 
 const handleCreateAttributionHypothesis = async (

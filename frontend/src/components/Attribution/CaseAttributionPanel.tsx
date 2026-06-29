@@ -1,4 +1,7 @@
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import PermissionGuard from "../Auth/PermissionGuard";
 
@@ -67,6 +70,21 @@ export default function CaseAttributionPanel({
     confidence: assessment.confidence,
     attributionStatus: assessment.attributionStatus,
   });
+
+  useEffect(() => {
+    setForm({
+      threatActor: assessment.threatActor ?? "",
+      campaignName: assessment.campaignName ?? "",
+      motivation: assessment.motivation ?? "",
+      initialAccess: assessment.initialAccess ?? "",
+      rootCause: assessment.rootCause ?? "",
+      finalAssessment: assessment.finalAssessment ?? "",
+      recommendedRemediation:
+        assessment.recommendedRemediation ?? "",
+      confidence: assessment.confidence,
+      attributionStatus: assessment.attributionStatus,
+    });
+  }, [assessment]);
 
   const [hypothesisTitle, setHypothesisTitle] =
     useState("");
