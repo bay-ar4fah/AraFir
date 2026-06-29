@@ -12,15 +12,37 @@ import {
 
 import PermissionGuard from "../../components/Auth/PermissionGuard";
 
+import type {
+  CaseCardAttributionProjection,
+} from "../../types/attributionProjection";
+
+import {
+  getCaseCardsAttributionProjection,
+} from "../../services/attributionProjectionService";
+
 export default function CasesPage() {
   const [cases, setCases] = useState<Case[]>([]);
   const [isModalOpen, setIsModalOpen] =
     useState(false);
 
   const loadCases = async () => {
-    const data = await getCases();
-    setCases(data);
-  };
+  const [caseData, attributionData] =
+    await Promise.all([
+      getCases(),
+      getCaseCardsAttributionProjection(),
+    ]);
+
+  setCases(caseData);
+
+  setAttributionByCaseId(
+    Object.fromEntries(
+      attributionData.map((item) => [
+        item.caseId,
+        item,
+      ])
+    )
+  );
+};
 
   useEffect(() => {
     loadCases();
@@ -54,6 +76,13 @@ export default function CasesPage() {
     }
   };
 
+  const [
+    attributionByCaseId,
+    setAttributionByCaseId,
+  ] = useState<
+    Record<string, CaseCardAttributionProjection>
+  >({});
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-start justify-between">
@@ -85,15 +114,13 @@ export default function CasesPage() {
         <div className="grid grid-cols-2 gap-4">
           {cases.map((item) => (
             <CaseCard
-              key={item.id}
-              forensicCase={item}
-              onDelete={() => {
-                void handleDeleteCase(
-                  item.id,
-                  item.caseName
-                );
-              }}
-            />
+                key={item.id}
+                forensicCase={item}
+                attribution={attributionByCaseId[item.id]}
+                onDelete={() =>
+                  handleDeleteCase(item.id, item.caseName)
+                }
+              />
           ))}
         </div>
       )}

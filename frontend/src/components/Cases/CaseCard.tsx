@@ -4,13 +4,19 @@ import type { Case } from "../../types/case";
 
 import PermissionGuard from "../Auth/PermissionGuard";
 
+import type {
+  CaseCardAttributionProjection,
+} from "../../types/attributionProjection";
+
 interface Props {
   forensicCase: Case;
-  onDelete?: () => void | Promise<void>;
+  attribution?: CaseCardAttributionProjection;
+  onDelete?: () => void;
 }
 
 export default function CaseCard({
   forensicCase,
+  attribution,
   onDelete,
 }: Props) {
   const statusColor =
@@ -89,6 +95,30 @@ export default function CaseCard({
           </span>
         </div>
       </Link>
+      <div className="mt-4 rounded-xl border border-zinc-800 bg-black/50 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] text-zinc-500">
+              Threat Actor
+            </p>
+
+            <p className="mt-1 truncate text-sm font-semibold text-zinc-100">
+              {attribution?.threatActor ??
+                "Unknown Actor"}
+            </p>
+          </div>
+
+          <span className="rounded border border-cyan-500/30 bg-cyan-500/10 px-2 py-1 text-[10px] font-semibold text-cyan-400">
+            {attribution?.confidence ?? "UNKNOWN"}
+          </span>
+        </div>
+
+        <p className="mt-2 truncate text-xs text-zinc-500">
+          Campaign:{" "}
+          {attribution?.campaignName ??
+            "Unassigned"}
+        </p>
+      </div>
 
       <div className="flex justify-end mt-4">
         <PermissionGuard permission="case:delete">

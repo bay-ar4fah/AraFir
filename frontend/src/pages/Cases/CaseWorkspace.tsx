@@ -89,6 +89,14 @@ import {
 
 import CaseAttributionPanel from "../../components/Attribution/CaseAttributionPanel";
 
+import type {
+  CaseAttributionProjection,
+} from "../../types/attributionProjection";
+
+import {
+  getCaseAttributionProjection,
+} from "../../services/attributionProjectionService";
+
 type WorkspaceTab =
   | "overview"
   | "evidence"
@@ -162,6 +170,9 @@ export default function CaseWorkspace() {
 
   const [attributionWorkspace, setAttributionWorkspace] =
     useState<AttributionWorkspace | null>(null);
+
+  const [attributionProjection, setAttributionProjection ] = 
+    useState<CaseAttributionProjection | null>(null);
 
   const [attackStory, setAttackStory] =
     useState<AttackStory | null>(null);
@@ -263,6 +274,17 @@ export default function CaseWorkspace() {
       setAttributionWorkspace(data);
     };
 
+  const loadAttributionProjection = async (
+      activeCaseId: string
+    ) => {
+      const data =
+        await getCaseAttributionProjection(
+          activeCaseId
+        );
+
+      setAttributionProjection(data);
+    };
+
   const loadAttackStory = async (
     activeCaseId: string
   ) => {
@@ -308,6 +330,7 @@ export default function CaseWorkspace() {
       loadFindings(activeCaseId),
       loadMitreFindings(activeCaseId),
       loadAttributionWorkspace(activeCaseId),
+      loadAttributionProjection(activeCaseId),
       loadAttackStory(activeCaseId),
       loadCustodyLogs(activeCaseId),
       loadAssignmentLogs(activeCaseId),
@@ -783,6 +806,9 @@ const handleUpdateAttributionHypothesisStatus = async (
           <CaseSummaryCard
             caseData={caseData}
           />
+          <AttributionProjectionCard
+            projection={attributionProjection}
+          />
 
           <QuickActionsCard
             caseData={caseData}
@@ -927,6 +953,122 @@ function CaseSummaryCard({
         />
       </div>
     </SideCard>
+  );
+}
+
+function AttributionProjectionCard({
+  projection,
+}: {
+  projection: CaseAttributionProjection | null;
+}) {
+  const confidence =
+    projection?.confidence ?? "UNKNOWN";
+
+  const confidenceClass =
+    confidence === "CONFIRMED"
+      ? "border-green-500/30 bg-green-500/10 text-green-400"
+      : confidence === "HIGH"
+      ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-400"
+      : confidence === "MEDIUM"
+      ? "border-yellow-500/30 bg-yellow-500/10 text-yellow-400"
+      : confidence === "LOW"
+      ? "border-zinc-500/30 bg-zinc-500/10 text-zinc-400"
+      : "border-zinc-700 bg-black/40 text-zinc-500";
+
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/20">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-bold">
+            Threat Attribution
+          </h2>
+
+          <p className="text-xs text-zinc-500">
+            Assessment projection
+          </p>
+        </div>
+
+        <span
+          className={`rounded border px-2 py-1 text-[10px] font-semibold ${confidenceClass}`}
+        >
+          {confidence}
+        </span>
+      </div>
+
+      <div className="mt-4 space-y-3 text-xs">
+        <ProjectionRow
+          label="Actor"
+          value={
+            projection?.threatActor ??
+            "Unknown Actor"
+          }
+        />
+
+        <ProjectionRow
+          label="Campaign"
+          value={
+            projection?.campaignName ??
+            "Unassigned"
+          }
+        />
+
+        <ProjectionRow
+          label="Status"
+          value={
+            projection?.attributionStatus ??
+            "DRAFT"
+          }
+        />
+
+        <ProjectionRow
+          label="Initial Access"
+          value={
+            projection?.initialAccess ??
+            "-"
+          }
+        />
+
+        <ProjectionRow
+          label="Root Cause"
+          value={
+            projection?.rootCause ??
+            "-"
+          }
+        />
+      </div>
+
+      {projection?.updatedAt && (
+        <p className="mt-4 text-[11px] text-zinc-500">
+          Updated:{" "}
+          {new Date(
+            projection.updatedAt
+          ).toLocaleString()}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ProjectionRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3 border-b border-zinc-800 pb-2">
+      <span className="shrink-0 text-zinc-500">
+        {label}
+      </span>
+
+      <span
+        className="max-w-[190px] text-right font-medium text-zinc-200 line-clamp-2"
+        title={value}
+      >
+        {value}
+      </span>
+    </div>
   );
 }
 
