@@ -25,6 +25,9 @@ export type Permission =
   | "attribution:read"
   | "attribution:update"
   | "attribution:review"
+  | "lessons:read"
+  | "lessons:update"
+  | "lessons:review"
   | "report:export"
   | "audit:read"
   | "user:manage";

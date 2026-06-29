@@ -97,6 +97,20 @@ import {
   getCaseAttributionProjection,
 } from "../../services/attributionProjectionService";
 
+import type {
+  CapaStatus,
+  LessonsWorkspace,
+} from "../../types/lessonsLearned";
+
+import {
+  createCapaAction,
+  getLessonsWorkspace,
+  updateCapaAction,
+  updateLessons,
+} from "../../services/lessonsLearnedService";
+
+import CaseLessonsPanel from "../../components/Lessons/CaseLessonsPanel";
+
 type WorkspaceTab =
   | "overview"
   | "evidence"
@@ -105,6 +119,7 @@ type WorkspaceTab =
   | "timeline"
   | "mitre"
   | "attribution"
+  | "lessons"
   | "custody";
 
 const tabs: {
@@ -118,6 +133,7 @@ const tabs: {
   { id: "timeline", label: "Timeline" },
   { id: "mitre", label: "MITRE" },
   { id: "attribution", label: "Attribution" },
+  { id: "lessons", label: "Lessons" },
   { id: "custody", label: "Custody" },
 ];
 
@@ -173,6 +189,9 @@ export default function CaseWorkspace() {
 
   const [attributionProjection, setAttributionProjection ] = 
     useState<CaseAttributionProjection | null>(null);
+
+  const [lessonsWorkspace, setLessonsWorkspace ] = 
+    useState<LessonsWorkspace | null>(null);
 
   const [attackStory, setAttackStory] =
     useState<AttackStory | null>(null);
@@ -285,6 +304,15 @@ export default function CaseWorkspace() {
       setAttributionProjection(data);
     };
 
+  const loadLessonsWorkspace = async (
+      activeCaseId: string
+    ) => {
+      const data =
+        await getLessonsWorkspace(activeCaseId);
+
+      setLessonsWorkspace(data);
+    };
+
   const loadAttackStory = async (
     activeCaseId: string
   ) => {
@@ -331,6 +359,7 @@ export default function CaseWorkspace() {
       loadMitreFindings(activeCaseId),
       loadAttributionWorkspace(activeCaseId),
       loadAttributionProjection(activeCaseId),
+      loadLessonsWorkspace(activeCaseId),
       loadAttackStory(activeCaseId),
       loadCustodyLogs(activeCaseId),
       loadAssignmentLogs(activeCaseId),
@@ -554,6 +583,48 @@ const handleUpdateAttributionHypothesisStatus = async (
   if (!caseId) return;
 
   await updateAttributionHypothesis(hypothesisId, {
+    status,
+  });
+
+  await refreshCaseWorkspace(caseId);
+};
+
+const handleUpdateLessons = async (
+  payload: Partial<LessonsWorkspace["lessons"]>
+) => {
+  if (!caseId) return;
+
+  await updateLessons(caseId, payload);
+  await refreshCaseWorkspace(caseId);
+
+  alert("Lessons learned saved successfully.");
+};
+
+const handleCreateCapa = async (payload: {
+  lessonsLearnedId: string;
+  actionType: "CORRECTIVE" | "PREVENTIVE";
+  title: string;
+  description: string;
+  priority: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  ownerTeam: string;
+  ownerName: string;
+  dueDate: string;
+}) => {
+  if (!caseId) return;
+
+  await createCapaAction(caseId, payload);
+  await refreshCaseWorkspace(caseId);
+
+  alert("CAPA action created successfully.");
+};
+
+const handleUpdateCapaStatus = async (
+  capaId: string,
+  status: CapaStatus
+) => {
+  if (!caseId) return;
+
+  await updateCapaAction(capaId, {
     status,
   });
 
@@ -785,6 +856,23 @@ const handleUpdateAttributionHypothesisStatus = async (
             ) : (
               <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 text-xs text-zinc-400">
                 Loading attribution workspace...
+              </div>
+            )
+          )}
+
+          {activeTab === "lessons" && (
+            lessonsWorkspace ? (
+              <CaseLessonsPanel
+                workspace={lessonsWorkspace}
+                onUpdateLessons={handleUpdateLessons}
+                onCreateCapa={handleCreateCapa}
+                onUpdateCapaStatus={
+                  handleUpdateCapaStatus
+                }
+              />
+            ) : (
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 text-xs text-zinc-400">
+                Loading lessons learned workspace...
               </div>
             )
           )}
