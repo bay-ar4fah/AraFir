@@ -19,6 +19,9 @@ import {
   ShieldAlert,
   Skull,
   BookOpen,
+  CheckCircle2,
+  AlertTriangle,
+  ClipboardCheck,
 } from "lucide-react";
 
 import type {
@@ -118,7 +121,7 @@ export default function Dashboard() {
           </button>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
           <MetricCard
             icon={<BriefcaseBusiness size={20} />}
             title="Open Cases"
@@ -149,6 +152,29 @@ export default function Dashboard() {
             value={data.metrics.attributionModels}
             accent="orange"
             subtitle="Candidate profiles"
+          />
+          <MetricCard
+            icon={<ClipboardCheck size={20} />}
+            title="Open CAPA"
+            value={data.capaMetrics.open}
+            accent="orange"
+            subtitle="Corrective actions open"
+          />
+
+          <MetricCard
+            icon={<CheckCircle2 size={20} />}
+            title="Verified CAPA"
+            value={data.capaMetrics.verified}
+            accent="emerald"
+            subtitle="Actions verified"
+          />
+
+          <MetricCard
+            icon={<AlertTriangle size={20} />}
+            title="Overdue CAPA"
+            value={data.capaMetrics.overdue}
+            accent="purple"
+            subtitle="Past due date"
           />
         </section>
 
@@ -235,6 +261,26 @@ export default function Dashboard() {
           >
             <AttributionSummary
               items={data.attributionSummary}
+            />
+          </Panel>
+          
+          <Panel
+              title="Root Cause Summary"
+              actionLabel="View lessons"
+              actionPath="/cases"
+            >
+              <RootCauseSummary
+                items={data.rootCauseSummary}
+              />
+            </Panel>
+
+          <Panel
+            title="CAPA Status"
+            actionLabel="View cases"
+            actionPath="/cases"
+          >
+            <CapaStatusPanel
+              metrics={data.capaMetrics}
             />
           </Panel>
 
@@ -556,6 +602,103 @@ function AttributionSummary({
           </p>
         </div>
       ))}
+    </div>
+  );
+}
+
+function RootCauseSummary({
+  items,
+}: {
+  items: {
+    category: string;
+    count: number;
+  }[];
+}) {
+  const max = Math.max(
+    ...items.map((item) => item.count),
+    1
+  );
+
+  if (items.length === 0) {
+    return (
+      <EmptyState text="No lessons learned data yet." />
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {items.map((item) => (
+        <div key={item.category}>
+          <div className="mb-1 flex justify-between text-xs">
+            <span className="truncate text-zinc-300">
+              {item.category}
+            </span>
+
+            <span className="text-zinc-500">
+              {item.count}
+            </span>
+          </div>
+
+          <div className="h-2 rounded bg-black">
+            <div
+              className="h-2 rounded bg-cyan-500"
+              style={{
+                width: `${Math.max(
+                  8,
+                  (item.count / max) * 100
+                )}%`,
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CapaStatusPanel({
+  metrics,
+}: {
+  metrics: {
+    open: number;
+    inProgress: number;
+    pendingVerification: number;
+    verified: number;
+    rejected: number;
+    overdue: number;
+  };
+}) {
+  return (
+    <div className="space-y-2 text-xs">
+      <ProcessRow
+        label="Open"
+        value={metrics.open}
+      />
+
+      <ProcessRow
+        label="In Progress"
+        value={metrics.inProgress}
+      />
+
+      <ProcessRow
+        label="Pending Verification"
+        value={metrics.pendingVerification}
+      />
+
+      <ProcessRow
+        label="Verified"
+        value={metrics.verified}
+      />
+
+      <ProcessRow
+        label="Rejected"
+        value={metrics.rejected}
+      />
+
+      <ProcessRow
+        label="Overdue"
+        value={metrics.overdue}
+      />
     </div>
   );
 }

@@ -71,4 +71,21 @@ export interface InvestigationDashboard {
   attributionSummary: DashboardAttributionItem[];
   evidenceProcessing: DashboardEvidenceProcessing;
   lessonsPending: DashboardLessonsPendingItem[];
+
+  capaMetrics: DashboardCapaMetrics;
+  rootCauseSummary: DashboardRootCauseItem[];
+}
+
+export interface DashboardCapaMetrics {
+  open: number;
+  inProgress: number;
+  pendingVerification: number;
+  verified: number;
+  rejected: number;
+  overdue: number;
+}
+
+export interface DashboardRootCauseItem {
+  category: string;
+  count: number;
 }
