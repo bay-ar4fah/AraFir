@@ -47,6 +47,8 @@ import attributionRoutes from "./routes/attributionRoutes";
 
 import lessonsLearnedRoutes from "./routes/lessonsLearnedRoutes";
 
+import memoryRoutes from "./routes/memoryRoutes";
+
 initDatabase();
 
 setTimeout(() => {
@@ -154,6 +156,8 @@ app.use(
   "/api", 
   findingRoutes
 );
+
+app.use("/api", memoryRoutes);
 
 app.use(
   "/api", 

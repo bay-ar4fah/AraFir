@@ -422,6 +422,54 @@ export function initDatabase() {
       CREATE INDEX IF NOT EXISTS idx_capa_actions_due_date
       ON capa_actions(due_date)
     `);
+
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS memory_artifacts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        case_id INTEGER NOT NULL,
+        evidence_id INTEGER,
+        artifact_type TEXT NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        process_name TEXT,
+        pid INTEGER,
+        ppid INTEGER,
+        command_line TEXT,
+        source_ip TEXT,
+        source_port INTEGER,
+        destination_ip TEXT,
+        destination_port INTEGER,
+        protocol TEXT,
+        severity TEXT NOT NULL DEFAULT 'LOW',
+        confidence INTEGER NOT NULL DEFAULT 50,
+        mitre_technique TEXT,
+        source_tool TEXT,
+        raw_json TEXT,
+        status TEXT NOT NULL DEFAULT 'NEW',
+        created_by TEXT,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT,
+
+        FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE,
+        FOREIGN KEY (evidence_id) REFERENCES evidence(id) ON DELETE SET NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_memory_artifacts_case_id
+      ON memory_artifacts(case_id);
+
+      CREATE INDEX IF NOT EXISTS idx_memory_artifacts_evidence_id
+      ON memory_artifacts(evidence_id);
+
+      CREATE INDEX IF NOT EXISTS idx_memory_artifacts_type
+      ON memory_artifacts(artifact_type);
+
+      CREATE INDEX IF NOT EXISTS idx_memory_artifacts_status
+      ON memory_artifacts(status);
+
+      CREATE INDEX IF NOT EXISTS idx_memory_artifacts_severity
+      ON memory_artifacts(severity);
+    `);
+
     console.log(
       "Database Initialized"
     );
