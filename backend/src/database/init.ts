@@ -52,8 +52,53 @@ export function initDatabase() {
         assignedByUserId TEXT,
         assignedByName TEXT,
         assignedAt TEXT
+        investigationType TEXT NOT NULL DEFAULT 'MULTI_SOURCE',
+        priority TEXT NOT NULL DEFAULT 'MEDIUM',
+        classification TEXT NOT NULL DEFAULT 'INTERNAL',
+        expectedEvidence TEXT,
+        caseTags TEXT
       )
     `);
+
+      const caseColumns = [
+    {
+      name: "investigationType",
+      sql: "ALTER TABLE cases ADD COLUMN investigationType TEXT NOT NULL DEFAULT 'MULTI_SOURCE'",
+    },
+    {
+      name: "priority",
+      sql: "ALTER TABLE cases ADD COLUMN priority TEXT NOT NULL DEFAULT 'MEDIUM'",
+    },
+    {
+      name: "classification",
+      sql: "ALTER TABLE cases ADD COLUMN classification TEXT NOT NULL DEFAULT 'INTERNAL'",
+    },
+    {
+      name: "expectedEvidence",
+      sql: "ALTER TABLE cases ADD COLUMN expectedEvidence TEXT",
+    },
+    {
+      name: "caseTags",
+      sql: "ALTER TABLE cases ADD COLUMN caseTags TEXT",
+    },
+  ];
+
+  caseColumns.forEach((column) => {
+    db.all(`PRAGMA table_info(cases)`, [], (err, rows: any[]) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+
+      const exists = rows.some(
+        (row) => row.name === column.name
+      );
+
+      if (!exists) {
+        db.run(column.sql);
+      }
+    });
+  });
 
     db.run(`
       CREATE TABLE IF NOT EXISTS timeline_events (

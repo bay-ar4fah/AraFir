@@ -26,16 +26,89 @@ import {
   reassignCase,
 } from "../services/caseService";
 
+const VALID_INVESTIGATION_TYPES = [
+  "WINDOWS_ENDPOINT",
+  "LINUX_SERVER",
+  "MEMORY_FORENSICS",
+  "NETWORK_FORENSICS",
+  "MOBILE_FORENSICS",
+  "CLOUD_FORENSICS",
+  "EMAIL_INVESTIGATION",
+  "MALWARE_ANALYSIS",
+  "RANSOMWARE",
+  "INSIDER_THREAT",
+  "MULTI_SOURCE",
+];
+
+const VALID_PRIORITIES = [
+  "LOW",
+  "MEDIUM",
+  "HIGH",
+  "CRITICAL",
+];
+
+const VALID_CLASSIFICATIONS = [
+  "INTERNAL",
+  "CONFIDENTIAL",
+  "RESTRICTED",
+  "LEGAL_HOLD",
+];
+
+function toJsonString(value: unknown) {
+  if (!value) return null;
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return JSON.stringify(value);
+}
+
+function normalizeInvestigationType(value: unknown) {
+  if (
+    typeof value === "string" &&
+    VALID_INVESTIGATION_TYPES.includes(value)
+  ) {
+    return value;
+  }
+
+  return "MULTI_SOURCE";
+}
+
+function normalizePriority(value: unknown) {
+  if (
+    typeof value === "string" &&
+    VALID_PRIORITIES.includes(value)
+  ) {
+    return value;
+  }
+
+  return "MEDIUM";
+}
+
+function normalizeClassification(value: unknown) {
+  if (
+    typeof value === "string" &&
+    VALID_CLASSIFICATIONS.includes(value)
+  ) {
+    return value;
+  }
+
+  return "INTERNAL";
+}
+
 export async function listCases(
   _req: Request,
   res: Response
 ) {
   try {
     const data = await getCases();
-    res.json(data);
+    return res.json(data);
   } catch (err) {
-    res.status(500).json({
-      error: "Failed to load cases"
+    console.error(err);
+
+    return res.status(500).json({
+      error: "Failed to load cases",
     });
   }
 }
@@ -55,6 +128,11 @@ export async function addCase(
       caseName,
       description,
       investigatorId,
+      investigationType,
+      priority,
+      classification,
+      expectedEvidence,
+      caseTags,
     } = req.body;
 
     if (!caseName || !investigatorId) {
@@ -72,6 +150,21 @@ export async function addCase(
       });
     }
 
+    const normalizedInvestigationType =
+      normalizeInvestigationType(investigationType);
+
+    const normalizedPriority =
+      normalizePriority(priority);
+
+    const normalizedClassification =
+      normalizeClassification(classification);
+
+    const normalizedExpectedEvidence =
+      toJsonString(expectedEvidence);
+
+    const normalizedCaseTags =
+      toJsonString(caseTags);
+
     const caseId = randomUUID();
 
     await createCase({
@@ -83,6 +176,11 @@ export async function addCase(
       assignedByUserId: req.user.id,
       assignedByName: req.user.name,
       status: "OPEN",
+      investigationType: normalizedInvestigationType,
+      priority: normalizedPriority,
+      classification: normalizedClassification,
+      expectedEvidence: normalizedExpectedEvidence,
+      caseTags: normalizedCaseTags,
     });
 
     await createAuditLog({
@@ -96,6 +194,11 @@ export async function addCase(
       metadata: {
         investigatorId: assignedUser.id,
         investigatorName: assignedUser.name,
+        investigationType: normalizedInvestigationType,
+        priority: normalizedPriority,
+        classification: normalizedClassification,
+        expectedEvidence: normalizedExpectedEvidence,
+        caseTags: normalizedCaseTags,
       },
     });
 
@@ -113,6 +216,7 @@ export async function addCase(
         assignedToRole: assignedUser.role,
       },
     });
+
     await createCaseAssignmentLog({
       caseId,
       assignedToUserId: assignedUser.id,
@@ -147,7 +251,7 @@ export async function detailCase(
 
     if (!id || Array.isArray(id)) {
       return res.status(400).json({
-        error: "Invalid case id"
+        error: "Invalid case id",
       });
     }
 
@@ -155,7 +259,7 @@ export async function detailCase(
 
     if (!data) {
       return res.status(404).json({
-        error: "Case not found"
+        error: "Case not found",
       });
     }
 
@@ -164,10 +268,11 @@ export async function detailCase(
     console.error(err);
 
     return res.status(500).json({
-      error: "Failed to load case"
+      error: "Failed to load case",
     });
   }
 }
+
 export async function deleteCase(
   req: Request,
   res: Response
@@ -182,6 +287,7 @@ export async function deleteCase(
     }
 
     await deleteCaseCascade(id);
+
     await createAuditLog({
       ...getAuditActor(req),
       action: "CASE_DELETED",
@@ -216,6 +322,7 @@ export async function reassignCaseById(
     }
 
     const { id } = req.params;
+
     const {
       investigatorId,
       reason,

@@ -1,14 +1,93 @@
 import { db } from "../database/db";
-import type { Case } from "../types/case";
+
+import type {
+  Case,
+  InvestigationType,
+  CasePriority,
+  CaseClassification,
+} from "../types/case";
+
+interface CaseRow {
+  id: string;
+  caseName: string;
+  description: string;
+  createdAt: string;
+  investigator: string;
+  investigatorId?: string | null;
+  investigatorName?: string | null;
+  assignedByUserId?: string | null;
+  assignedByName?: string | null;
+  assignedAt?: string | null;
+  status: Case["status"];
+  investigationType?: string | null;
+  priority?: string | null;
+  classification?: string | null;
+  expectedEvidence?: string | null;
+  caseTags?: string | null;
+}
+
+function mapCase(row: CaseRow): Case {
+  return {
+    id: row.id,
+    caseName: row.caseName,
+    description: row.description,
+
+    investigator: row.investigator,
+
+    investigatorId:
+      row.investigatorId ?? undefined,
+
+    investigatorName:
+      row.investigatorName ?? undefined,
+
+    assignedByUserId:
+      row.assignedByUserId ?? undefined,
+
+    assignedByName:
+      row.assignedByName ?? undefined,
+
+    assignedAt:
+      row.assignedAt ?? undefined,
+
+    createdAt: row.createdAt,
+
+    status: row.status,
+
+    investigationType:
+      (row.investigationType ??
+        "MULTI_SOURCE") as InvestigationType,
+
+    priority:
+      (row.priority ??
+        "MEDIUM") as CasePriority,
+
+    classification:
+      (row.classification ??
+        "INTERNAL") as CaseClassification,
+
+    expectedEvidence:
+      row.expectedEvidence ?? null,
+
+    caseTags:
+      row.caseTags ?? null,
+  };
+}
 
 export function getCases(): Promise<Case[]> {
   return new Promise((resolve, reject) => {
     db.all(
-      `SELECT * FROM cases ORDER BY createdAt DESC`,
+      `
+      SELECT *
+      FROM cases
+      ORDER BY createdAt DESC
+      `,
       [],
       (err: Error | null, rows: unknown[]) => {
         if (err) return reject(err);
-        resolve(rows as Case[]);
+
+        resolve(
+          (rows as CaseRow[]).map(mapCase)
+        );
       }
     );
   });
@@ -23,6 +102,11 @@ export function createCase(params: {
   assignedByUserId: string;
   assignedByName: string;
   status: string;
+  investigationType: string;
+  priority: string;
+  classification: string;
+  expectedEvidence: string | null;
+  caseTags: string | null;
 }): Promise<void> {
   return new Promise((resolve, reject) => {
     db.run(
@@ -38,8 +122,31 @@ export function createCase(params: {
         assignedByUserId,
         assignedByName,
         assignedAt,
-        status
-      ) VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+        status,
+        investigationType,
+        priority,
+        classification,
+        expectedEvidence,
+        caseTags
+      )
+      VALUES (
+        ?,
+        ?,
+        ?,
+        CURRENT_TIMESTAMP,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        CURRENT_TIMESTAMP,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?
+      )
       `,
       [
         params.id,
@@ -51,6 +158,11 @@ export function createCase(params: {
         params.assignedByUserId,
         params.assignedByName,
         params.status,
+        params.investigationType,
+        params.priority,
+        params.classification,
+        params.expectedEvidence,
+        params.caseTags,
       ],
       (err) => {
         if (err) reject(err);
@@ -74,12 +186,20 @@ export function getCaseById(
       (err: Error | null, row: unknown) => {
         if (err) return reject(err);
 
-        resolve((row as Case) || null);
+        if (!row) {
+          resolve(null);
+          return;
+        }
+
+        resolve(
+          mapCase(row as CaseRow)
+        );
       }
     );
   });
 }
-  export function deleteCaseCascade(
+
+export function deleteCaseCascade(
   caseId: string
 ): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -138,7 +258,11 @@ export function getAssignableUserById(
       [userId],
       (err, row) => {
         if (err) reject(err);
-        else resolve(row as AssignableUserRow | undefined);
+        else {
+          resolve(
+            row as AssignableUserRow | undefined
+          );
+        }
       }
     );
   });
