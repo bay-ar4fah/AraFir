@@ -110,33 +110,9 @@ import {
 } from "../../services/lessonsLearnedService";
 
 import CaseLessonsPanel from "../../components/Lessons/CaseLessonsPanel";
-import { getDomainTabs } from "../../utils/caseWorkspaceTabs";
+import { getDomainTabs, getCaseWorkspaceTabs, type WorkspaceTab, } from "../../utils/caseWorkspaceTabs";
+import DomainPlaceholderPanel from "../../components/Forensics/DomainPlaceholderPanel";
 
-type WorkspaceTab =
-  | "overview"
-  | "evidence"
-  | "findings"
-  | "activity"
-  | "timeline"
-  | "mitre"
-  | "attribution"
-  | "lessons"
-  | "custody";
-
-const tabs: {
-  id: WorkspaceTab;
-  label: string;
-}[] = [
-  { id: "overview", label: "Overview" },
-  { id: "evidence", label: "Evidence" },
-  { id: "findings", label: "Findings" },
-  { id: "activity", label: "Activity" },
-  { id: "timeline", label: "Timeline" },
-  { id: "mitre", label: "MITRE" },
-  { id: "attribution", label: "Attribution" },
-  { id: "lessons", label: "Lessons" },
-  { id: "custody", label: "Custody" },
-];
 
 function getSourceClass(source: string) {
   if (source === "AUDIT") {
@@ -170,8 +146,37 @@ export default function CaseWorkspace() {
   const [activeTab, setActiveTab] =
     useState<WorkspaceTab>("overview");
 
+  const domainTabIds: WorkspaceTab[] = [
+    "memory",
+    "processes",
+    "dll",
+    "malfind",
+    "yara",
+    "network",
+    "flows",
+    "dns",
+    "http",
+    "tls",
+    "files",
+    "mobile",
+    "apps",
+    "messages",
+    "calls",
+    "location",
+    "media",
+  ];
+
+  const isDomainTab =
+    domainTabIds.includes(activeTab);
+
   const [caseData, setCaseData] =
     useState<Case | null>(null);
+
+  const workspaceTabs = useMemo(() => {
+  return getCaseWorkspaceTabs(
+    caseData?.investigationType
+  );
+  }, [caseData?.investigationType]);
 
   const [evidence, setEvidence] =
     useState<Evidence[]>([]);
@@ -374,6 +379,22 @@ export default function CaseWorkspace() {
     getCaseById(caseId).then(setCaseData);
     refreshCaseWorkspace(caseId);
   }, [caseId]);
+
+  useEffect(() => {
+  if (!caseData) return;
+
+  const allowedTabs =
+    getCaseWorkspaceTabs(
+      caseData.investigationType
+    ).map((tab) => tab.id);
+
+  if (!allowedTabs.includes(activeTab)) {
+    setActiveTab("overview");
+  }
+}, [
+  caseData,
+  activeTab,
+]);
 
   const handleReassignCase = async (
     investigatorId: string,
@@ -685,7 +706,7 @@ const handleUpdateCapaStatus = async (
               </p>
 
               <div className="mt-5 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {tabs.map((tab) => (
+                {workspaceTabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() =>
@@ -787,6 +808,10 @@ const handleUpdateCapaStatus = async (
                 }
               />
 
+              <ActiveModulesCard
+                tabs={workspaceTabs}
+              />
+
               <DomainWorkspaceCard
                 investigationType={
                   caseData.investigationType
@@ -814,6 +839,16 @@ const handleUpdateCapaStatus = async (
               onUpload={handleEvidenceUpload}
               onExclude={handleExcludeEvidence}
               onRestore={handleRestoreEvidence}
+            />
+          )}
+
+          {isDomainTab && (
+            <DomainPlaceholderPanel
+              caseId={caseData.id}
+              investigationType={
+                caseData.investigationType
+              }
+              activeTab={activeTab}
             />
           )}
 
@@ -1045,6 +1080,33 @@ function CaseSummaryCard({
           label="Status"
           value={caseData.status}
           accent
+        />
+
+        <SummaryRow
+          icon={<Shield size={16} />}
+          label="Type"
+          value={
+            caseData.investigationType
+              ? caseData.investigationType.replaceAll(
+                  "_",
+                  " "
+                )
+              : "MULTI SOURCE"
+          }
+        />
+
+        <SummaryRow
+          icon={<Activity size={16} />}
+          label="Priority"
+          value={caseData.priority ?? "MEDIUM"}
+        />
+
+        <SummaryRow
+          icon={<Shield size={16} />}
+          label="Classification"
+          value={
+            caseData.classification ?? "INTERNAL"
+          }
         />
 
         <SummaryRow
@@ -1916,11 +1978,67 @@ function DomainWorkspaceCard({
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {domainTabs.map((tab) => (
           <div
-            key={tab}
+            key={tab.id}
             className="rounded-xl border border-zinc-800 bg-black/70 p-4"
           >
             <p className="text-sm font-semibold text-zinc-100">
-              {tab}
+              {tab.label}
+            </p>
+
+            <p className="mt-1 text-xs text-zinc-500">
+              Case-linked forensic module.
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ActiveModulesCard({
+  tabs,
+}: {
+  tabs: {
+    id: string;
+    label: string;
+    group: string;
+  }[];
+}) {
+  const domainTabs =
+    tabs.filter(
+      (tab) => tab.group === "domain"
+    );
+
+  if (domainTabs.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/20">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-base font-bold">
+            Active Investigation Modules
+          </h2>
+
+          <p className="text-xs text-zinc-400">
+            Modules activated based on investigation type.
+          </p>
+        </div>
+
+        <span className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-400">
+          {domainTabs.length} modules
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {domainTabs.map((tab) => (
+          <div
+            key={tab.id}
+            className="rounded-xl border border-zinc-800 bg-black/70 p-4"
+          >
+            <p className="text-sm font-semibold text-zinc-100">
+              {tab.label}
             </p>
 
             <p className="mt-1 text-xs text-zinc-500">
