@@ -16,6 +16,7 @@ import CaseAttackGraph from "../pages/Cases/CaseAttackGraph";
 import UserManagement from "../pages/Users/UserManagement";
 import ForceChangePassword from "../pages/Auth/ForceChangePassword";
 import AuditLogs from "../pages/Audit/AuditLogs";
+import MemoryWorkspace from "../pages/Memory/MemoryWorkspace";
 
 export default function AppRoutes() {
   return (
@@ -72,6 +73,11 @@ export default function AppRoutes() {
         <Route
           path="/cases/:caseId"
           element={<CaseWorkspace />}
+        />
+
+        <Route 
+          path="/cases/:caseId/memory" 
+          element={<MemoryWorkspace />} 
         />
 
         <Route

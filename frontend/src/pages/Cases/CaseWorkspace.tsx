@@ -113,7 +113,6 @@ import CaseLessonsPanel from "../../components/Lessons/CaseLessonsPanel";
 import { getDomainTabs, getCaseWorkspaceTabs, type WorkspaceTab, } from "../../utils/caseWorkspaceTabs";
 import DomainPlaceholderPanel from "../../components/Forensics/DomainPlaceholderPanel";
 
-
 function getSourceClass(source: string) {
   if (source === "AUDIT") {
     return "bg-cyan-500/10 text-cyan-400 border-cyan-500/30";
@@ -724,8 +723,20 @@ const handleUpdateCapaStatus = async (
               </div>
             </div>
 
+
             <div className="space-y-4">
               <div className="flex flex-wrap justify-start gap-3 xl:justify-end">
+                <Link
+                  to={`/cases/${caseId}/memory`}
+                  className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 hover:bg-zinc-900"
+                >
+                  <p className="text-sm font-semibold text-zinc-100">Memory Forensics</p>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    Processes, command lines, injected code, memory indicators, and network
+                    artifacts from RAM dump.
+                  </p>
+                </Link>
+
                 <Link
                   to={`/cases/${caseData.id}/graph`}
                   className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold hover:bg-cyan-700"

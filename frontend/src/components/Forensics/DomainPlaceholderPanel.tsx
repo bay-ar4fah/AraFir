@@ -1,8 +1,11 @@
+import { Link } from "react-router-dom";
+
 import {
+  ArrowRight,
   Brain,
+  FileSearch,
   Network,
   Smartphone,
-  FileSearch,
 } from "lucide-react";
 
 import type {
@@ -35,9 +38,7 @@ function getIcon(type?: InvestigationType) {
   return FileSearch;
 }
 
-function getDomainTitle(
-  type?: InvestigationType
-) {
+function getDomainTitle(type?: InvestigationType) {
   if (type === "MEMORY_FORENSICS") {
     return "Memory Forensics Workspace";
   }
@@ -58,7 +59,7 @@ function getDescription(
   activeTab?: WorkspaceTab
 ) {
   if (type === "MEMORY_FORENSICS") {
-    return `Case-linked memory analysis module for ${activeTab}. Future implementation will include process tree, DLL, handles, malfind, YARA, and memory timeline.`;
+    return `Case-linked memory analysis module for ${activeTab}. This workspace is now connected to the dedicated Memory Workspace for process, command line, injection, malware indicator, and network artifact review.`;
   }
 
   if (type === "NETWORK_FORENSICS") {
@@ -72,12 +73,60 @@ function getDescription(
   return `Case-linked investigation module for ${activeTab}.`;
 }
 
+function getWorkspacePath(
+  caseId: string,
+  type?: InvestigationType
+) {
+  if (type === "MEMORY_FORENSICS") {
+    return `/cases/${caseId}/memory`;
+  }
+
+  return null;
+}
+
+function getCapabilityTitle(type?: InvestigationType) {
+  if (type === "MEMORY_FORENSICS") {
+    return "Enterprise Memory Capabilities";
+  }
+
+  return "Planned Enterprise Capabilities";
+}
+
+function getCapabilities(type?: InvestigationType) {
+  if (type === "MEMORY_FORENSICS") {
+    return [
+      "Case-linked memory artifact review",
+      "Process and command-line investigation",
+      "Suspicious process triage",
+      "Memory network artifact mapping",
+      "MITRE technique enrichment",
+      "Finding-ready forensic summary",
+    ];
+  }
+
+  return [
+    "Case-linked artifact extraction",
+    "Artifact-to-evidence relationship mapping",
+    "Timeline enrichment from parsed artifacts",
+    "Suggested findings with confidence scoring",
+    "IOC extraction and correlation",
+    "Report-ready forensic summary",
+  ];
+}
+
 export default function DomainPlaceholderPanel({
   caseId,
   investigationType,
   activeTab,
 }: Props) {
   const Icon = getIcon(investigationType);
+  const workspacePath = getWorkspacePath(
+    caseId,
+    investigationType
+  );
+
+  const isMemoryWorkspace =
+    investigationType === "MEMORY_FORENSICS";
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-lg shadow-black/20">
@@ -88,9 +137,17 @@ export default function DomainPlaceholderPanel({
           </div>
 
           <div>
-            <h2 className="text-base font-bold">
-              {getDomainTitle(investigationType)}
-            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-bold">
+                {getDomainTitle(investigationType)}
+              </h2>
+
+              {isMemoryWorkspace && (
+                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
+                  Active
+                </span>
+              )}
+            </div>
 
             <p className="mt-1 max-w-3xl text-xs leading-5 text-zinc-400">
               {getDescription(
@@ -105,9 +162,25 @@ export default function DomainPlaceholderPanel({
           </div>
         </div>
 
-        <span className="rounded-lg border border-zinc-700 bg-black/50 px-3 py-1 text-xs text-zinc-400">
-          {activeTab.toUpperCase()}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-lg border border-zinc-700 bg-black/50 px-3 py-1 text-xs text-zinc-400">
+            {activeTab.toUpperCase()}
+          </span>
+
+          {workspacePath ? (
+            <Link
+              to={workspacePath}
+              className="inline-flex items-center gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20 hover:text-cyan-200"
+            >
+              Open Memory Workspace
+              <ArrowRight size={14} />
+            </Link>
+          ) : (
+            <span className="rounded-lg border border-zinc-700 bg-black/50 px-3 py-1 text-xs text-zinc-500">
+              Planned
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -117,28 +190,62 @@ export default function DomainPlaceholderPanel({
         />
 
         <DomainMetric
-          label="Parsed Artifacts"
+          label={
+            isMemoryWorkspace
+              ? "Memory Artifacts"
+              : "Parsed Artifacts"
+          }
           value="0"
         />
 
         <DomainMetric
-          label="Suggested Findings"
+          label={
+            isMemoryWorkspace
+              ? "Suspicious Indicators"
+              : "Suggested Findings"
+          }
           value="0"
         />
       </div>
 
+      {workspacePath && (
+        <div className="mt-5 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-cyan-100">
+                Dedicated Memory Workspace Available
+              </h3>
+
+              <p className="mt-1 text-xs leading-5 text-cyan-200/70">
+                Continue this case into the Memory Workspace to review
+                process artifacts, command lines, suspicious indicators,
+                MITRE mappings, and memory-derived network traces.
+              </p>
+            </div>
+
+            <Link
+              to={workspacePath}
+              className="inline-flex w-fit items-center gap-2 rounded-lg bg-cyan-400 px-4 py-2 text-xs font-semibold text-zinc-950 transition hover:bg-cyan-300"
+            >
+              Open Workspace
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="mt-5 rounded-xl border border-zinc-800 bg-black/70 p-4">
         <h3 className="text-sm font-semibold">
-          Planned Enterprise Capabilities
+          {getCapabilityTitle(investigationType)}
         </h3>
 
         <div className="mt-3 grid gap-2 text-xs text-zinc-400 md:grid-cols-2">
-          <Capability text="Case-linked artifact extraction" />
-          <Capability text="Artifact-to-evidence relationship mapping" />
-          <Capability text="Timeline enrichment from parsed artifacts" />
-          <Capability text="Suggested findings with confidence scoring" />
-          <Capability text="IOC extraction and correlation" />
-          <Capability text="Report-ready forensic summary" />
+          {getCapabilities(investigationType).map((capability) => (
+            <Capability
+              key={capability}
+              text={capability}
+            />
+          ))}
         </div>
       </div>
     </div>
