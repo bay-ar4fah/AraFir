@@ -23,8 +23,8 @@ export interface Case {
 }
 
 export type InvestigationType =
-  | "WINDOWS_ENDPOINT"
-  | "LINUX_SERVER"
+  | "WINDOWS_FORENSICS"
+  | "LINUX_FORENSICS"
   | "MEMORY_FORENSICS"
   | "NETWORK_FORENSICS"
   | "MOBILE_FORENSICS"
