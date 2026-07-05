@@ -119,6 +119,22 @@ export default function CaseCard({
             "Unassigned"}
         </p>
       </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="rounded border border-cyan-500/30 bg-cyan-500/10 px-2 py-1 text-[10px] font-semibold text-cyan-400">
+            {forensicCase.investigationType?.replaceAll(
+              "_",
+              " "
+            ) ?? "MULTI SOURCE"}
+          </span>
+
+          <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-2 py-1 text-[10px] font-semibold text-yellow-400">
+            {forensicCase.priority ?? "MEDIUM"}
+          </span>
+
+          <span className="rounded border border-purple-500/30 bg-purple-500/10 px-2 py-1 text-[10px] font-semibold text-purple-400">
+            {forensicCase.classification ?? "INTERNAL"}
+          </span>
+        </div>
 
       <div className="flex justify-end mt-4">
         <PermissionGuard permission="case:delete">

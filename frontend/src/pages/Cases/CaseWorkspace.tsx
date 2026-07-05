@@ -18,7 +18,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 
-import type { Case } from "../../types/case";
+import type { Case, InvestigationType } from "../../types/case";
 import type { Evidence } from "../../types/evidence";
 import type { TimelineEvent } from "../../types/timeline";
 import type { MitreFinding } from "../../types/mitreFinding";
@@ -110,6 +110,7 @@ import {
 } from "../../services/lessonsLearnedService";
 
 import CaseLessonsPanel from "../../components/Lessons/CaseLessonsPanel";
+import { getDomainTabs } from "../../utils/caseWorkspaceTabs";
 
 type WorkspaceTab =
   | "overview"
@@ -321,7 +322,7 @@ export default function CaseWorkspace() {
 
     setAttackStory(data);
   };
-
+  
   const loadCustodyLogs = async (
     activeCaseId: string
   ) => {
@@ -786,6 +787,12 @@ const handleUpdateCapaStatus = async (
                 }
               />
 
+              <DomainWorkspaceCard
+                investigationType={
+                  caseData.investigationType
+                }
+              />
+
               <AttackStoryPanel
                 story={attackStory}
               />
@@ -1039,6 +1046,34 @@ function CaseSummaryCard({
           value={caseData.status}
           accent
         />
+
+        <SummaryRow
+          icon={<Shield size={16} />}
+          label="Type"
+          value={
+            caseData.investigationType
+              ? caseData.investigationType.replaceAll(
+                  "_",
+                  " "
+                )
+              : "MULTI SOURCE"
+          }
+        />
+
+        <SummaryRow
+          icon={<Activity size={16} />}
+          label="Priority"
+          value={caseData.priority ?? "MEDIUM"}
+        />
+
+        <SummaryRow
+          icon={<Shield size={16} />}
+          label="Classification"
+          value={
+            caseData.classification ?? "INTERNAL"
+          }
+        />
+
       </div>
     </SideCard>
   );
@@ -1846,6 +1881,53 @@ function ActivityDrawer({
             </pre>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function DomainWorkspaceCard({
+  investigationType,
+}: {
+  investigationType?: string;
+}) {
+  const type =
+    (investigationType ??
+      "MULTI_SOURCE") as InvestigationType;
+
+  const domainTabs =
+    getDomainTabs(type);
+
+  if (domainTabs.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/20">
+      <h2 className="text-base font-bold">
+        Domain Workspace
+      </h2>
+
+      <p className="mt-1 text-xs text-zinc-400">
+        Investigation modules activated for{" "}
+        {type.replaceAll("_", " ")}.
+      </p>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {domainTabs.map((tab) => (
+          <div
+            key={tab}
+            className="rounded-xl border border-zinc-800 bg-black/70 p-4"
+          >
+            <p className="text-sm font-semibold text-zinc-100">
+              {tab}
+            </p>
+
+            <p className="mt-1 text-xs text-zinc-500">
+              Case-linked forensic module.
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );
