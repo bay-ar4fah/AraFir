@@ -834,6 +834,7 @@ export default function CaseWorkspace() {
           <main className="min-w-0 space-y-6">
             {activeTab === "evidence" && (
               <EvidenceWorkspace
+                caseId={caseData.id}
                 evidence={evidence}
                 activeEvidence={activeEvidence}
                 excludedEvidence={excludedEvidence}
@@ -1459,21 +1460,23 @@ function ActiveModulesCard({
           icon={<HardDrive size={28} />}
           title="Evidence Imaging"
           badge="NEW"
-          description="Acquisition metadata, forensic image records, hashing, write blocker, and verification workflow."
+          badgeTone="cyan"
+          description="Acquisition metadata, forensic image records, hash verification, write blocker usage, and chain-of-custody-ready imaging workflow."
           metrics={[
             {
-              label: "Format",
-              value: "E01 / RAW",
+              label: "Images",
+              value: 0,
             },
             {
-              label: "Hashing",
-              value: "SHA256",
+              label: "Verified",
+              value: 0,
             },
             {
               label: "Status",
               value: "Ready",
             },
           ]}
+          progress={30}
           actionLabel="Open Imaging"
           to={`/cases/${caseId}/evidence-imaging`}
         />
@@ -1486,6 +1489,7 @@ function ModuleTile({
   icon,
   title,
   badge,
+  badgeTone = "green",
   description,
   metrics,
   progress,
@@ -1496,6 +1500,7 @@ function ModuleTile({
   icon: ReactNode;
   title: string;
   badge: string;
+  badgeTone?: "green" | "cyan";
   description: string;
   metrics: {
     label: string;
@@ -1513,12 +1518,22 @@ function ModuleTile({
     </>
   );
 
+  const badgeClass =
+    badgeTone === "cyan"
+      ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-300"
+      : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300";
+
+  const dotClass =
+    badgeTone === "cyan"
+      ? "bg-cyan-400"
+      : "bg-emerald-400";
+
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 transition hover:border-cyan-500/30">
       <div className="grid gap-4 lg:grid-cols-[auto_minmax(0,1fr)_minmax(320px,0.85fr)_auto] lg:items-center">
         <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-300">
           {icon}
-          <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-emerald-400 ring-4 ring-zinc-950" />
+          <span className={`absolute -right-1 -top-1 h-3 w-3 rounded-full ${dotClass} ring-4 ring-zinc-950`} />
         </div>
 
         <div className="min-w-0">
@@ -1527,7 +1542,7 @@ function ModuleTile({
               {title}
             </h3>
 
-            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${badgeClass}`}>
               {badge}
             </span>
           </div>
@@ -2116,6 +2131,7 @@ function CaseActivityCompact({
 }
 
 function EvidenceWorkspace({
+  caseId,
   evidence,
   activeEvidence,
   excludedEvidence,
@@ -2125,6 +2141,7 @@ function EvidenceWorkspace({
   onExclude,
   onRestore,
 }: {
+  caseId: string;
   evidence: Evidence[];
   activeEvidence: Evidence[];
   excludedEvidence: Evidence[];
@@ -2277,7 +2294,9 @@ function EvidenceWorkspace({
         </button>
 
         <Link
-          to="evidence-imaging"
+          to={`/cases/${caseId}/evidence-imaging`}
+          title="Open Evidence Imaging"
+          aria-label="Open Evidence Imaging"
           className="inline-flex items-center justify-center rounded-lg border border-zinc-800 px-3 py-2 text-zinc-400 hover:bg-zinc-800"
         >
           <HardDrive size={15} />

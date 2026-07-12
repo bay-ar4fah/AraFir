@@ -17,6 +17,7 @@ import UserManagement from "../pages/Users/UserManagement";
 import ForceChangePassword from "../pages/Auth/ForceChangePassword";
 import AuditLogs from "../pages/Audit/AuditLogs";
 import MemoryWorkspace from "../pages/Memory/MemoryWorkspace";
+import EvidenceImagingWorkspace from "../pages/EvidenceImaging/EvidencenImagingWorkspace";
 
 export default function AppRoutes() {
   return (
@@ -73,6 +74,11 @@ export default function AppRoutes() {
         <Route
           path="/cases/:caseId"
           element={<CaseWorkspace />}
+        />
+
+        <Route
+          path="/cases/:caseId/evidence-imaging"
+          element={<EvidenceImagingWorkspace />}
         />
 
         <Route 
