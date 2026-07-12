@@ -16,6 +16,12 @@ import {
   Activity,
   Database,
   MoreVertical,
+  Copy,
+  Cpu,
+  ChevronRight,
+  BookOpen,
+  HardDrive,
+  AlertTriangle,
 } from "lucide-react";
 
 import type { Case, InvestigationType } from "../../types/case";
@@ -48,10 +54,8 @@ import { uploadArtifact } from "../../services/artifactService";
 
 import CaseTimelinePanel from "../../components/Timeline/CaseTimelinePanel";
 import CaseMitrePanel from "../../components/Mitre/CaseMitrePanel";
-import AttackStoryPanel from "../../components/AttackStory/AttackStoryPanel";
 import EvidenceStatusBadge from "../../components/Evidence/EvidenceStatusBadge";
 import CaseCustodyPanel from "../../components/Custody/CaseCustodyPanel";
-import CaseAssignmentPanel from "../../components/Cases/CaseAssignmentPanel";
 import CaseAssignmentHistoryPanel from "../../components/Cases/CaseAssignmentHistoryPanel";
 import ReassignCaseModal from "../../components/Cases/ReassignCaseModal";
 import PermissionGuard from "../../components/Auth/PermissionGuard";
@@ -110,7 +114,10 @@ import {
 } from "../../services/lessonsLearnedService";
 
 import CaseLessonsPanel from "../../components/Lessons/CaseLessonsPanel";
-import { getDomainTabs, getCaseWorkspaceTabs, type WorkspaceTab, } from "../../utils/caseWorkspaceTabs";
+import {
+  getCaseWorkspaceTabs,
+  type WorkspaceTab,
+} from "../../utils/caseWorkspaceTabs";
 import DomainPlaceholderPanel from "../../components/Forensics/DomainPlaceholderPanel";
 
 function getSourceClass(source: string) {
@@ -137,6 +144,69 @@ function formatMetadata(metadata: string | null) {
   } catch {
     return metadata;
   }
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) return "-";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleString();
+}
+
+function formatDateOnly(value?: string | null) {
+  if (!value) return "-";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleDateString();
+}
+
+function formatTimeOnly(value?: string | null) {
+  if (!value) return undefined;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return undefined;
+  }
+
+  return date.toLocaleTimeString();
+}
+
+function formatInvestigationType(type?: InvestigationType | string | null) {
+  if (!type) return "MULTI SOURCE";
+
+  return type.replaceAll("_", " ");
+}
+
+function getAttackNarrative(story: AttackStory | null) {
+  if (!story) {
+    return "Initial analysis indicates suspicious activity requiring deeper investigation. Evidence, timeline, MITRE mapping, and artifact relationships should be reviewed to reconstruct the attack story.";
+  }
+
+  const normalizedStory = story as unknown as {
+    narrative?: string;
+    summary?: string;
+    attackSummary?: string;
+    description?: string;
+  };
+
+  return (
+    normalizedStory.narrative ||
+    normalizedStory.summary ||
+    normalizedStory.attackSummary ||
+    normalizedStory.description ||
+    "Attack story data has been loaded. Review timeline, MITRE findings, activities, and evidence relationships to validate the investigation narrative."
+  );
 }
 
 export default function CaseWorkspace() {
@@ -172,9 +242,9 @@ export default function CaseWorkspace() {
     useState<Case | null>(null);
 
   const workspaceTabs = useMemo(() => {
-  return getCaseWorkspaceTabs(
-    caseData?.investigationType
-  );
+    return getCaseWorkspaceTabs(
+      caseData?.investigationType
+    );
   }, [caseData?.investigationType]);
 
   const [evidence, setEvidence] =
@@ -192,10 +262,10 @@ export default function CaseWorkspace() {
   const [attributionWorkspace, setAttributionWorkspace] =
     useState<AttributionWorkspace | null>(null);
 
-  const [attributionProjection, setAttributionProjection ] = 
+  const [attributionProjection, setAttributionProjection] =
     useState<CaseAttributionProjection | null>(null);
 
-  const [lessonsWorkspace, setLessonsWorkspace ] = 
+  const [lessonsWorkspace, setLessonsWorkspace] =
     useState<LessonsWorkspace | null>(null);
 
   const [attackStory, setAttackStory] =
@@ -242,15 +312,20 @@ export default function CaseWorkspace() {
   }, [activeEvidence]);
 
   const lastImported = useMemo(() => {
-    if (evidence.length === 0) return "-";
+    if (evidence.length === 0) return null;
 
     const latest = evidence
       .map((item) =>
         new Date(item.importedAt).getTime()
       )
+      .filter((timestamp) =>
+        !Number.isNaN(timestamp)
+      )
       .sort((a, b) => b - a)[0];
 
-    return new Date(latest).toLocaleString();
+    if (!latest) return null;
+
+    return new Date(latest).toISOString();
   }, [evidence]);
 
   const loadEvidence = async (
@@ -290,33 +365,33 @@ export default function CaseWorkspace() {
   };
 
   const loadAttributionWorkspace = async (
-      activeCaseId: string
-    ) => {
-      const data =
-        await getAttributionWorkspace(activeCaseId);
+    activeCaseId: string
+  ) => {
+    const data =
+      await getAttributionWorkspace(activeCaseId);
 
-      setAttributionWorkspace(data);
-    };
+    setAttributionWorkspace(data);
+  };
 
   const loadAttributionProjection = async (
-      activeCaseId: string
-    ) => {
-      const data =
-        await getCaseAttributionProjection(
-          activeCaseId
-        );
+    activeCaseId: string
+  ) => {
+    const data =
+      await getCaseAttributionProjection(
+        activeCaseId
+      );
 
-      setAttributionProjection(data);
-    };
+    setAttributionProjection(data);
+  };
 
   const loadLessonsWorkspace = async (
-      activeCaseId: string
-    ) => {
-      const data =
-        await getLessonsWorkspace(activeCaseId);
+    activeCaseId: string
+  ) => {
+    const data =
+      await getLessonsWorkspace(activeCaseId);
 
-      setLessonsWorkspace(data);
-    };
+    setLessonsWorkspace(data);
+  };
 
   const loadAttackStory = async (
     activeCaseId: string
@@ -326,7 +401,7 @@ export default function CaseWorkspace() {
 
     setAttackStory(data);
   };
-  
+
   const loadCustodyLogs = async (
     activeCaseId: string
   ) => {
@@ -380,20 +455,27 @@ export default function CaseWorkspace() {
   }, [caseId]);
 
   useEffect(() => {
-  if (!caseData) return;
+    if (!caseData) return;
 
-  const allowedTabs =
-    getCaseWorkspaceTabs(
-      caseData.investigationType
-    ).map((tab) => tab.id);
+    const allowedTabs =
+      getCaseWorkspaceTabs(
+        caseData.investigationType
+      ).map((tab) => tab.id);
 
-  if (!allowedTabs.includes(activeTab)) {
-    setActiveTab("overview");
-  }
-}, [
-  caseData,
-  activeTab,
-]);
+    if (!allowedTabs.includes(activeTab)) {
+      setActiveTab("overview");
+    }
+  }, [
+    caseData,
+    activeTab,
+  ]);
+
+  const handleCopyCaseId = async () => {
+    if (!caseData) return;
+
+    await navigator.clipboard.writeText(caseData.id);
+    alert("Case ID copied");
+  };
 
   const handleReassignCase = async (
     investigatorId: string,
@@ -517,32 +599,32 @@ export default function CaseWorkspace() {
     }
   };
 
-    const handleCreateFinding = async (payload: {
-  title: string;
-  description: string;
-  severity: FindingSeverity;
-  confidence: FindingConfidence;
-}) => {
-  if (!caseId) return;
+  const handleCreateFinding = async (payload: {
+    title: string;
+    description: string;
+    severity: FindingSeverity;
+    confidence: FindingConfidence;
+  }) => {
+    if (!caseId) return;
 
-  await createFinding(caseId, payload);
-  await refreshCaseWorkspace(caseId);
-};
+    await createFinding(caseId, payload);
+    await refreshCaseWorkspace(caseId);
+  };
 
-const handleUpdateFindingStatus = async (
-  finding: Finding,
-  status: FindingStatus
-) => {
-  if (!caseId) return;
+  const handleUpdateFindingStatus = async (
+    finding: Finding,
+    status: FindingStatus
+  ) => {
+    if (!caseId) return;
 
-  await updateFinding(finding.id, {
-    status,
-  });
+    await updateFinding(finding.id, {
+      status,
+    });
 
-  await refreshCaseWorkspace(caseId);
-};
+    await refreshCaseWorkspace(caseId);
+  };
 
-const handleDeleteFinding = async (
+  const handleDeleteFinding = async (
     finding: Finding
   ) => {
     if (!caseId) return;
@@ -557,422 +639,298 @@ const handleDeleteFinding = async (
     await refreshCaseWorkspace(caseId);
   };
 
+  const handleUpdateAttributionAssessment = async (
+    payload: Partial<AttributionWorkspace["assessment"]>
+  ) => {
+    if (!caseId) return;
+
+    try {
+      await updateAttributionAssessment(caseId, payload);
+
+      await refreshCaseWorkspace(caseId);
+
+      alert("Attribution assessment saved successfully.");
+    } catch (err) {
+      console.error(err);
+
+      alert("Failed to save attribution assessment.");
+    }
+  };
+
+  const handleCreateAttributionHypothesis = async (
+    payload: {
+      assessmentId: string;
+      title: string;
+      description: string;
+      confidence: AttributionConfidence;
+    }
+  ) => {
+    if (!caseId) return;
+
+    await createAttributionHypothesis(caseId, payload);
+    await refreshCaseWorkspace(caseId);
+  };
+
+  const handleUpdateAttributionHypothesisStatus = async (
+    hypothesisId: string,
+    status: HypothesisStatus
+  ) => {
+    if (!caseId) return;
+
+    await updateAttributionHypothesis(hypothesisId, {
+      status,
+    });
+
+    await refreshCaseWorkspace(caseId);
+  };
+
+  const handleUpdateLessons = async (
+    payload: Partial<LessonsWorkspace["lessons"]>
+  ) => {
+    if (!caseId) return;
+
+    await updateLessons(caseId, payload);
+    await refreshCaseWorkspace(caseId);
+
+    alert("Lessons learned saved successfully.");
+  };
+
+  const handleCreateCapa = async (payload: {
+    lessonsLearnedId: string;
+    actionType: "CORRECTIVE" | "PREVENTIVE";
+    title: string;
+    description: string;
+    priority: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+    ownerTeam: string;
+    ownerName: string;
+    dueDate: string;
+  }) => {
+    if (!caseId) return;
+
+    await createCapaAction(caseId, payload);
+    await refreshCaseWorkspace(caseId);
+
+    alert("CAPA action created successfully.");
+  };
+
+  const handleUpdateCapaStatus = async (
+    capaId: string,
+    status: CapaStatus
+  ) => {
+    if (!caseId) return;
+
+    await updateCapaAction(capaId, {
+      status,
+    });
+
+    await refreshCaseWorkspace(caseId);
+  };
+
   if (!caseData) {
     return (
-      <div className="min-h-screen bg-zinc-950 p-5 text-sm text-zinc-400">
+      <div className="min-h-screen bg-zinc-950 p-6 text-sm text-zinc-400">
         Loading case...
       </div>
     );
   }
 
-const handleUpdateAttributionAssessment = async (
-  payload: Partial<AttributionWorkspace["assessment"]>
-) => {
-  if (!caseId) return;
-
-  try {
-    await updateAttributionAssessment(caseId, payload);
-
-    await refreshCaseWorkspace(caseId);
-
-    alert("Attribution assessment saved successfully.");
-  } catch (err) {
-    console.error(err);
-
-    alert("Failed to save attribution assessment.");
-  }
-};
-
-const handleCreateAttributionHypothesis = async (
-  payload: {
-    assessmentId: string;
-    title: string;
-    description: string;
-    confidence: AttributionConfidence;
-  }
-) => {
-  if (!caseId) return;
-
-  await createAttributionHypothesis(caseId, payload);
-  await refreshCaseWorkspace(caseId);
-};
-
-const handleUpdateAttributionHypothesisStatus = async (
-  hypothesisId: string,
-  status: HypothesisStatus
-) => {
-  if (!caseId) return;
-
-  await updateAttributionHypothesis(hypothesisId, {
-    status,
-  });
-
-  await refreshCaseWorkspace(caseId);
-};
-
-const handleUpdateLessons = async (
-  payload: Partial<LessonsWorkspace["lessons"]>
-) => {
-  if (!caseId) return;
-
-  await updateLessons(caseId, payload);
-  await refreshCaseWorkspace(caseId);
-
-  alert("Lessons learned saved successfully.");
-};
-
-const handleCreateCapa = async (payload: {
-  lessonsLearnedId: string;
-  actionType: "CORRECTIVE" | "PREVENTIVE";
-  title: string;
-  description: string;
-  priority: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
-  ownerTeam: string;
-  ownerName: string;
-  dueDate: string;
-}) => {
-  if (!caseId) return;
-
-  await createCapaAction(caseId, payload);
-  await refreshCaseWorkspace(caseId);
-
-  alert("CAPA action created successfully.");
-};
-
-const handleUpdateCapaStatus = async (
-  capaId: string,
-  status: CapaStatus
-) => {
-  if (!caseId) return;
-
-  await updateCapaAction(capaId, {
-    status,
-  });
-
-  await refreshCaseWorkspace(caseId);
-};
-
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      <section className="border-b border-zinc-800 bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900/60">
-        <div className="mx-auto max-w-[1600px] px-5 py-5">
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(420px,760px)]">
-            <div className="min-w-0">
-              <div className="mb-2 flex items-center gap-2 text-xs text-zinc-500">
-                <Link
-                  to="/cases"
-                  className="hover:text-cyan-400"
-                >
-                  Cases
-                </Link>
-
-                <span>/</span>
-
-                <span className="truncate">
-                  {caseData.caseName}
-                </span>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="truncate text-2xl font-bold tracking-tight md:text-3xl">
-                  {caseData.caseName}
-                </h1>
-
-                <span className="rounded-lg bg-green-500/10 px-3 py-1 text-xs font-semibold text-green-400">
-                  {caseData.status}
-                </span>
-              </div>
-
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <p className="font-mono text-xs text-zinc-500">
-                  Case ID: {caseData.id}
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(caseData.id);
-                    alert("Case ID copied");
-                  }}
-                  className="rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-white"
-                >
-                  Copy
-                </button>
-              </div>
-
-              <p className="mt-3 max-w-4xl text-sm leading-6 text-zinc-400">
-                {caseData.description}
-              </p>
-
-              <div className="mt-5 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {workspaceTabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() =>
-                      setActiveTab(tab.id)
-                    }
-                    className={`rounded-lg px-4 py-2 text-xs font-medium transition ${
-                      activeTab === tab.id
-                        ? "bg-cyan-600 text-white shadow-lg shadow-cyan-500/10"
-                        : "border border-zinc-800 bg-black/30 text-zinc-400 hover:bg-zinc-900 hover:text-white"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
+      <section className="border-b border-zinc-800 bg-[radial-gradient(circle_at_top_right,rgba(6,182,212,0.12),transparent_36%),linear-gradient(180deg,rgba(9,9,11,1),rgba(24,24,27,0.72))]">
+        <div className="mx-auto max-w-[1600px] px-6 py-6">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(520px,760px)]">
+            <CaseHero
+              caseData={caseData}
+              onCopyCaseId={handleCopyCaseId}
+            />
 
             <div className="space-y-4">
-              <div className="flex flex-wrap justify-start gap-3 xl:justify-end">
-                <Link
-                  to={`/cases/${caseId}/memory`}
-                  className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 hover:bg-zinc-900"
-                >
-                  <p className="text-sm font-semibold text-zinc-100">Memory Forensics</p>
-                  <p className="mt-1 text-xs text-zinc-500">
-                    Processes, command lines, injected code, memory indicators, and network
-                    artifacts from RAM dump.
-                  </p>
-                </Link>
+              <CaseContextStrip
+                caseData={caseData}
+                lastImported={lastImported}
+              />
 
-                <Link
-                  to={`/cases/${caseData.id}/graph`}
-                  className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold hover:bg-cyan-700"
-                >
-                  <GitBranch size={16} />
-                  View Attack Graph
-                </Link>
-
-                <button
-                  disabled
-                  className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-zinc-500"
-                >
-                  <FileText size={16} />
-                  Generate Report
-                </button>
-
-                <button className="rounded-xl border border-zinc-800 px-3 py-2.5 text-zinc-400 hover:bg-zinc-900">
-                  <MoreVertical size={18} />
-                </button>
-              </div>
-
-              <div className="grid rounded-2xl border border-zinc-800 bg-zinc-900/80 shadow-lg shadow-black/20 sm:grid-cols-2 xl:grid-cols-5">
-                <HeaderMetric
-                  icon={<Database size={14} />}
-                  label="Active Evidence"
-                  value={activeEvidence.length}
-                  accent="cyan"
-                />
-
-                <HeaderMetric
-                  icon={<CheckCircle2 size={14} />}
-                  label="Excluded"
-                  value={excludedEvidence.length}
-                  accent="green"
-                />
-
-                <HeaderMetric
-                  icon={<Activity size={14} />}
-                  label="Timeline Events"
-                  value={timeline.length}
-                  accent="cyan"
-                />
-
-                <HeaderMetric
-                  icon={<Shield size={14} />}
-                  label="MITRE Findings"
-                  value={mitreFindings.length}
-                  accent="purple"
-                />
-
-                <HeaderMetric
-                  icon={<Clock3 size={14} />}
-                  label="Last Import"
-                  value={
-                    lastImported === "-"
-                      ? "-"
-                      : new Date(lastImported).toLocaleDateString()
-                  }
-                  subValue={
-                    lastImported === "-"
-                      ? undefined
-                      : new Date(lastImported).toLocaleTimeString()
-                  }
-                  accent="yellow"
-                />
-              </div>
+              <HeaderActions
+                caseData={caseData}
+                onCopyCaseId={handleCopyCaseId}
+              />
             </div>
           </div>
+
+          <WorkspaceTabBar
+            tabs={workspaceTabs}
+            activeTab={activeTab}
+            onChange={setActiveTab}
+          />
+
+          <HeaderMetricsGrid
+            activeEvidence={activeEvidence.length}
+            excludedEvidence={excludedEvidence.length}
+            timelineEvents={timeline.length}
+            mitreFindings={mitreFindings.length}
+            lastImported={lastImported}
+          />
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-[1600px] gap-5 p-5 xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_390px]">
-        <main className="min-w-0 space-y-5">
-          {activeTab === "overview" && (
-            <>
-              <CaseAssignmentPanel
-                forensicCase={caseData}
+      <div className="mx-auto max-w-[1600px] p-6">
+        {activeTab === "overview" && (
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.95fr)]">
+            <main className="min-w-0 space-y-6">
+              <CaseAssignmentCard
+                caseData={caseData}
                 onReassignClick={() =>
                   setIsReassignModalOpen(true)
                 }
               />
 
-              <ActiveModulesCard
-                tabs={workspaceTabs}
-              />
-
-              <DomainWorkspaceCard
-                investigationType={
-                  caseData.investigationType
-                }
-              />
-
-              <AttackStoryPanel
+              <DynamicInvestigationNarrative
                 story={attackStory}
+              />
+
+              <ActiveModulesCard
+                caseId={caseData.id}
+                tabs={workspaceTabs}
+                investigationType={caseData.investigationType}
+                evidenceCount={activeEvidence.length}
+                findingsCount={findings.length}
+                onSelectTab={setActiveTab}
+              />
+
+              <EvidenceSnapshotCard
+                evidence={activeEvidence}
+                onViewAll={() => setActiveTab("evidence")}
               />
 
               <CaseActivityCompact
                 activities={activities}
                 onSelectActivity={setSelectedActivity}
               />
-            </>
-          )}
+            </main>
 
-          {activeTab === "evidence" && (
-            <EvidenceWorkspace
-              evidence={evidence}
-              activeEvidence={activeEvidence}
-              excludedEvidence={excludedEvidence}
-              isUploading={isUploading}
-              activeEvidenceActionId={activeEvidenceActionId}
-              onUpload={handleEvidenceUpload}
-              onExclude={handleExcludeEvidence}
-              onRestore={handleRestoreEvidence}
-            />
-          )}
-
-          {isDomainTab && (
-            <DomainPlaceholderPanel
-              caseId={caseData.id}
-              investigationType={
-                caseData.investigationType
-              }
-              activeTab={activeTab}
-            />
-          )}
-
-          {activeTab === "findings" && (
-            <CaseFindingsPanel
-              findings={findings}
-              onCreate={handleCreateFinding}
-              onUpdateStatus={handleUpdateFindingStatus}
-              onDelete={handleDeleteFinding}
-            />
-          )}
-
-          {activeTab === "activity" && (
-            <CaseActivityCompact
-              activities={activities}
-              onSelectActivity={setSelectedActivity}
-              expanded
-            />
-          )}
-
-          {activeTab === "timeline" && (
-            <CaseTimelinePanel
-              events={timeline}
-            />
-          )}
-
-          {activeTab === "mitre" && (
-            <CaseMitrePanel
-              findings={mitreFindings}
-            />
-          )}
-
-          {activeTab === "attribution" && (
-            attributionWorkspace ? (
-              <CaseAttributionPanel
-                workspace={attributionWorkspace}
-                onUpdateAssessment={
-                  handleUpdateAttributionAssessment
-                }
-                onCreateHypothesis={
-                  handleCreateAttributionHypothesis
-                }
-                onUpdateHypothesisStatus={
-                  handleUpdateAttributionHypothesisStatus
-                }
-              />
-            ) : (
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 text-xs text-zinc-400">
-                Loading attribution workspace...
-              </div>
-            )
-          )}
-
-          {activeTab === "lessons" && (
-            lessonsWorkspace ? (
-              <CaseLessonsPanel
-                workspace={lessonsWorkspace}
-                onUpdateLessons={handleUpdateLessons}
-                onCreateCapa={handleCreateCapa}
-                onUpdateCapaStatus={
-                  handleUpdateCapaStatus
-                }
-              />
-            ) : (
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 text-xs text-zinc-400">
-                Loading lessons learned workspace...
-              </div>
-            )
-          )}
-
-          {activeTab === "custody" && (
-            <>
-              <CaseAssignmentHistoryPanel
-                logs={assignmentLogs}
+            <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
+              <CaseSummaryCard
+                caseData={caseData}
               />
 
-              <CaseCustodyPanel
-                logs={custodyLogs}
+              <QuickInsightsCard
+                timelineEvents={timeline.length}
+                mitreFindings={mitreFindings.length}
+                findings={findings.length}
+                activities={activities.length}
+                custodyLogs={custodyLogs.length}
+                activeEvidenceSize={activeEvidenceSize}
+                lastImported={lastImported}
               />
-            </>
-          )}
-        </main>
 
-        <aside className="space-y-4 xl:sticky xl:top-5 xl:self-start">
-          <CaseSummaryCard
-            caseData={caseData}
-          />
-          <AttributionProjectionCard
-            projection={attributionProjection}
-          />
+              <AttributionProjectionCard
+                projection={attributionProjection}
+              />
+            </aside>
+          </div>
+        )}
 
-          <QuickActionsCard
-            caseData={caseData}
-            onReassign={() =>
-              setIsReassignModalOpen(true)
-            }
-          />
+        {activeTab !== "overview" && (
+          <main className="min-w-0 space-y-6">
+            {activeTab === "evidence" && (
+              <EvidenceWorkspace
+                evidence={evidence}
+                activeEvidence={activeEvidence}
+                excludedEvidence={excludedEvidence}
+                isUploading={isUploading}
+                activeEvidenceActionId={activeEvidenceActionId}
+                onUpload={handleEvidenceUpload}
+                onExclude={handleExcludeEvidence}
+                onRestore={handleRestoreEvidence}
+              />
+            )}
 
-          <QuickCountsCard
-            activeEvidence={activeEvidence.length}
-            excludedEvidence={excludedEvidence.length}
-            timeline={timeline.length}
-            findings={findings.length}
-            mitre={mitreFindings.length}
-            activities={activities.length}
-            custody={custodyLogs.length}
-            activeSize={activeEvidenceSize}
-          />
+            {isDomainTab && (
+              <DomainPlaceholderPanel
+                caseId={caseData.id}
+                investigationType={
+                  caseData.investigationType
+                }
+                activeTab={activeTab}
+              />
+            )}
 
-          <p className="text-center text-xs text-zinc-500">
-            All times are displayed in your local time zone.
-          </p>
-        </aside>
+            {activeTab === "findings" && (
+              <CaseFindingsPanel
+                findings={findings}
+                onCreate={handleCreateFinding}
+                onUpdateStatus={handleUpdateFindingStatus}
+                onDelete={handleDeleteFinding}
+              />
+            )}
+
+            {activeTab === "activity" && (
+              <CaseActivityCompact
+                activities={activities}
+                onSelectActivity={setSelectedActivity}
+                expanded
+              />
+            )}
+
+            {activeTab === "timeline" && (
+              <CaseTimelinePanel
+                events={timeline}
+              />
+            )}
+
+            {activeTab === "mitre" && (
+              <CaseMitrePanel
+                findings={mitreFindings}
+              />
+            )}
+
+            {activeTab === "attribution" && (
+              attributionWorkspace ? (
+                <CaseAttributionPanel
+                  workspace={attributionWorkspace}
+                  onUpdateAssessment={
+                    handleUpdateAttributionAssessment
+                  }
+                  onCreateHypothesis={
+                    handleCreateAttributionHypothesis
+                  }
+                  onUpdateHypothesisStatus={
+                    handleUpdateAttributionHypothesisStatus
+                  }
+                />
+              ) : (
+                <EmptyPanel text="Loading attribution workspace..." />
+              )
+            )}
+
+            {activeTab === "lessons" && (
+              lessonsWorkspace ? (
+                <CaseLessonsPanel
+                  workspace={lessonsWorkspace}
+                  onUpdateLessons={handleUpdateLessons}
+                  onCreateCapa={handleCreateCapa}
+                  onUpdateCapaStatus={
+                    handleUpdateCapaStatus
+                  }
+                />
+              ) : (
+                <EmptyPanel text="Loading lessons learned workspace..." />
+              )
+            )}
+
+            {activeTab === "custody" && (
+              <>
+                <CaseAssignmentHistoryPanel
+                  logs={assignmentLogs}
+                />
+
+                <CaseCustodyPanel
+                  logs={custodyLogs}
+                />
+              </>
+            )}
+          </main>
+        )}
       </div>
 
       {selectedActivity && (
@@ -999,6 +957,278 @@ const handleUpdateCapaStatus = async (
   );
 }
 
+function CaseHero({
+  caseData,
+  onCopyCaseId,
+}: {
+  caseData: Case;
+  onCopyCaseId: () => void;
+}) {
+  return (
+    <div className="min-w-0">
+      <div className="mb-3 flex items-center gap-2 text-xs text-zinc-500">
+        <Link
+          to="/cases"
+          className="font-medium text-cyan-400 hover:text-cyan-300"
+        >
+          Cases
+        </Link>
+
+        <span>/</span>
+
+        <span className="truncate">
+          {caseData.caseName}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="truncate text-3xl font-black tracking-tight text-zinc-50 md:text-4xl">
+          {caseData.caseName}
+        </h1>
+
+        <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-300">
+          {caseData.status}
+        </span>
+      </div>
+
+      <p className="mt-3 max-w-4xl text-sm leading-6 text-zinc-400">
+        {caseData.description ||
+          "No case description available."}
+      </p>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="text-xs text-zinc-500">
+          Case ID
+        </span>
+
+        <button
+          type="button"
+          onClick={onCopyCaseId}
+          className="inline-flex max-w-full items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-[11px] text-zinc-300 transition hover:border-cyan-500/40 hover:text-cyan-300"
+        >
+          <span className="truncate">
+            {caseData.id}
+          </span>
+          <Copy size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CaseContextStrip({
+  caseData,
+  lastImported,
+}: {
+  caseData: Case;
+  lastImported: string | null;
+}) {
+  return (
+    <div className="grid gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4 shadow-lg shadow-black/20 sm:grid-cols-2 xl:grid-cols-4">
+      <ContextItem
+        icon={<Cpu size={18} />}
+        label="Investigation Type"
+        value={formatInvestigationType(
+          caseData.investigationType
+        )}
+      />
+
+      <ContextItem
+        icon={<span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />}
+        label="Priority"
+        value={caseData.priority ?? "MEDIUM"}
+      />
+
+      <ContextItem
+        icon={<UserRound size={18} />}
+        label="Investigator"
+        value={
+          caseData.investigatorName ||
+          caseData.investigator ||
+          "-"
+        }
+      />
+
+      <ContextItem
+        icon={<CalendarDays size={18} />}
+        label="Last Import"
+        value={formatDateOnly(lastImported)}
+      />
+    </div>
+  );
+}
+
+function ContextItem({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-3 border-zinc-800 xl:border-r xl:last:border-r-0">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-950 text-cyan-300">
+        {icon}
+      </div>
+
+      <div className="min-w-0">
+        <p className="text-xs text-zinc-500">
+          {label}
+        </p>
+
+        <p
+          className="mt-1 truncate text-sm font-semibold text-zinc-100"
+          title={value}
+        >
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function HeaderActions({
+  caseData,
+  onCopyCaseId,
+}: {
+  caseData: Case;
+  onCopyCaseId: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap justify-start gap-3 xl:justify-end">
+      <button
+        type="button"
+        onClick={onCopyCaseId}
+        className="inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950 px-5 py-3 text-sm font-semibold text-zinc-200 transition hover:bg-zinc-900"
+      >
+        <Copy size={17} />
+        Copy ID
+      </button>
+
+      <Link
+        to={`/cases/${caseData.id}/graph`}
+        className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-400"
+      >
+        <GitBranch size={17} />
+        View Attack Graph
+      </Link>
+
+      <button
+        disabled
+        className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-5 py-3 text-sm font-semibold text-zinc-500"
+      >
+        <FileText size={17} />
+        Generate Report
+      </button>
+
+      <button className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-3 text-zinc-400 transition hover:bg-zinc-900">
+        <MoreVertical size={18} />
+      </button>
+    </div>
+  );
+}
+
+function WorkspaceTabBar({
+  tabs,
+  activeTab,
+  onChange,
+}: {
+  tabs: {
+    id: WorkspaceTab;
+    label: string;
+    group: string;
+  }[];
+  activeTab: WorkspaceTab;
+  onChange: (tab: WorkspaceTab) => void;
+}) {
+  return (
+    <div className="mt-6 overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900/60 p-2 shadow-lg shadow-black/20">
+      <div className="flex min-w-max gap-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => onChange(tab.id)}
+            className={`inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition ${
+              activeTab === tab.id
+                ? "bg-cyan-500/15 text-cyan-300 shadow-inner shadow-cyan-500/10 ring-1 ring-cyan-500/30"
+                : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                activeTab === tab.id
+                  ? "bg-cyan-300"
+                  : "bg-zinc-700"
+              }`}
+            />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HeaderMetricsGrid({
+  activeEvidence,
+  excludedEvidence,
+  timelineEvents,
+  mitreFindings,
+  lastImported,
+}: {
+  activeEvidence: number;
+  excludedEvidence: number;
+  timelineEvents: number;
+  mitreFindings: number;
+  lastImported: string | null;
+}) {
+  return (
+    <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <HeaderMetric
+        icon={<Database size={21} />}
+        label="Active Evidence"
+        value={activeEvidence}
+        subValue="Items"
+        accent="cyan"
+      />
+
+      <HeaderMetric
+        icon={<CheckCircle2 size={21} />}
+        label="Excluded"
+        value={excludedEvidence}
+        subValue="Items"
+        accent="green"
+      />
+
+      <HeaderMetric
+        icon={<Activity size={21} />}
+        label="Timeline Events"
+        value={timelineEvents}
+        subValue="Events"
+        accent="cyan"
+      />
+
+      <HeaderMetric
+        icon={<Shield size={21} />}
+        label="MITRE Findings"
+        value={mitreFindings}
+        subValue="Findings"
+        accent="purple"
+      />
+
+      <HeaderMetric
+        icon={<Clock3 size={21} />}
+        label="Last Import"
+        value={formatDateOnly(lastImported)}
+        subValue={formatTimeOnly(lastImported)}
+        accent="yellow"
+      />
+    </div>
+  );
+}
+
 function HeaderMetric({
   icon,
   label,
@@ -1012,33 +1242,436 @@ function HeaderMetric({
   subValue?: string;
   accent: "cyan" | "green" | "purple" | "yellow";
 }) {
-  const color = {
-    cyan: "text-cyan-400",
-    green: "text-green-400",
-    purple: "text-purple-400",
-    yellow: "text-yellow-400",
+  const tone = {
+    cyan: "bg-cyan-500/10 text-cyan-300",
+    green: "bg-emerald-500/10 text-emerald-300",
+    purple: "bg-purple-500/10 text-purple-300",
+    yellow: "bg-yellow-500/10 text-yellow-300",
   }[accent];
 
   return (
-    <div className="border-b border-zinc-800 p-4 sm:border-r sm:border-b-0 last:border-r-0">
-      <div className="flex items-center gap-2 text-xs text-zinc-400">
-        <span className={color}>
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-5 shadow-lg shadow-black/20">
+      <div className="flex items-center gap-4">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${tone}`}>
           {icon}
-        </span>
+        </div>
 
-        {label}
+        <div className="min-w-0">
+          <p className="text-xs text-zinc-500">
+            {label}
+          </p>
+
+          <p className="mt-1 text-2xl font-bold leading-tight text-zinc-50">
+            {value}
+          </p>
+
+          {subValue && (
+            <p className="text-xs text-zinc-500">
+              {subValue}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CaseAssignmentCard({
+  caseData,
+  onReassignClick,
+}: {
+  caseData: Case;
+  onReassignClick: () => void;
+}) {
+  return (
+    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-lg shadow-black/20">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <UserRound className="text-cyan-300" size={22} />
+
+          <div>
+            <h2 className="text-lg font-bold text-zinc-100">
+              Case Assignment
+            </h2>
+
+            <p className="text-xs text-zinc-500">
+              Current responsibility and assignment ownership.
+            </p>
+          </div>
+        </div>
+
+        <PermissionGuard permission="case:assign">
+          <button
+            type="button"
+            onClick={onReassignClick}
+            className="rounded-xl bg-cyan-500 px-4 py-2 text-xs font-bold text-zinc-950 transition hover:bg-cyan-400"
+          >
+            Reassign
+          </button>
+        </PermissionGuard>
       </div>
 
-      <p className="mt-2 text-2xl font-bold leading-tight">
-        {value}
+      <div className="grid gap-5 md:grid-cols-4">
+        <InfoBlock
+          label="Assigned Investigator"
+          value={
+            caseData.investigatorName ||
+            caseData.investigator ||
+            "-"
+          }
+        />
+
+        <InfoBlock
+          label="Assigned By"
+          value={caseData.assignedByName ?? "-"}
+        />
+
+        <InfoBlock
+          label="Assigned At"
+          value={formatDateTime(caseData.assignedAt)}
+        />
+
+        <InfoBlock
+          label="Current Responsibility"
+          value="Investigation & Analysis"
+        />
+      </div>
+    </section>
+  );
+}
+
+function DynamicInvestigationNarrative({
+  story,
+}: {
+  story: AttackStory | null;
+}) {
+  return (
+    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-lg shadow-black/20">
+      <div className="mb-3 flex items-center gap-3">
+        <BookOpen className="text-indigo-300" size={22} />
+
+        <h2 className="text-lg font-bold text-zinc-100">
+          Dynamic Investigation Narrative
+        </h2>
+      </div>
+
+      <p className="max-w-4xl text-sm leading-6 text-zinc-400">
+        {getAttackNarrative(story)}
       </p>
 
-      {subValue && (
-        <p className="text-xs text-zinc-500">
-          {subValue}
-        </p>
-      )}
+      <button className="mt-5 inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm text-zinc-200 transition hover:border-cyan-500/40 hover:text-cyan-300">
+        View Full Attack Story
+        <ChevronRight size={15} />
+      </button>
+    </section>
+  );
+}
+
+function ActiveModulesCard({
+  caseId,
+  tabs,
+  investigationType,
+  evidenceCount,
+  findingsCount,
+  onSelectTab,
+}: {
+  caseId: string;
+  tabs: {
+    id: WorkspaceTab;
+    label: string;
+    group: string;
+  }[];
+  investigationType?: InvestigationType;
+  evidenceCount: number;
+  findingsCount: number;
+  onSelectTab: (tab: WorkspaceTab) => void;
+}) {
+  const domainTabs = tabs.filter(
+    (tab) => tab.group === "domain"
+  );
+
+  const primaryDomainTab =
+    domainTabs.find((tab) => tab.id === "memory") ||
+    domainTabs[0];
+
+  const primaryTitle =
+    investigationType === "MEMORY_FORENSICS"
+      ? "Memory Forensics"
+      : primaryDomainTab?.label || "Domain Workspace";
+
+  const primaryDescription =
+    investigationType === "MEMORY_FORENSICS"
+      ? "Processes, command lines, injected code, memory indicators, and network artifacts."
+      : "Case-linked forensic domain module based on investigation type.";
+
+  return (
+    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-lg shadow-black/20">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Cpu className="text-cyan-300" size={22} />
+
+          <div>
+            <h2 className="text-lg font-bold text-zinc-100">
+              Active Investigation Modules
+            </h2>
+
+            <p className="text-xs text-zinc-500">
+              Modules activated based on investigation type.
+            </p>
+          </div>
+        </div>
+
+        <span className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300">
+          {(primaryDomainTab ? 1 : 0) + 1} modules
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        {primaryDomainTab && (
+          <ModuleTile
+            icon={<Cpu size={28} />}
+            title={primaryTitle}
+            badge="ACTIVE"
+            description={primaryDescription}
+            metrics={[
+              {
+                label: "Evidence",
+                value: evidenceCount,
+              },
+              {
+                label: "Findings",
+                value: findingsCount,
+              },
+              {
+                label: "Progress",
+                value: "68%",
+              },
+            ]}
+            progress={68}
+            actionLabel="Open Module"
+            onAction={() =>
+              onSelectTab(primaryDomainTab.id)
+            }
+          />
+        )}
+
+        <ModuleTile
+          icon={<HardDrive size={28} />}
+          title="Evidence Imaging"
+          badge="NEW"
+          description="Acquisition metadata, forensic image records, hashing, write blocker, and verification workflow."
+          metrics={[
+            {
+              label: "Format",
+              value: "E01 / RAW",
+            },
+            {
+              label: "Hashing",
+              value: "SHA256",
+            },
+            {
+              label: "Status",
+              value: "Ready",
+            },
+          ]}
+          actionLabel="Open Imaging"
+          to={`/cases/${caseId}/evidence-imaging`}
+        />
+      </div>
+    </section>
+  );
+}
+
+function ModuleTile({
+  icon,
+  title,
+  badge,
+  description,
+  metrics,
+  progress,
+  actionLabel,
+  to,
+  onAction,
+}: {
+  icon: ReactNode;
+  title: string;
+  badge: string;
+  description: string;
+  metrics: {
+    label: string;
+    value: string | number;
+  }[];
+  progress?: number;
+  actionLabel: string;
+  to?: string;
+  onAction?: () => void;
+}) {
+  const actionContent = (
+    <>
+      {actionLabel}
+      <ChevronRight size={14} />
+    </>
+  );
+
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 transition hover:border-cyan-500/30">
+      <div className="grid gap-4 lg:grid-cols-[auto_minmax(0,1fr)_minmax(320px,0.85fr)_auto] lg:items-center">
+        <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-300">
+          {icon}
+          <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-emerald-400 ring-4 ring-zinc-950" />
+        </div>
+
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-bold text-zinc-100">
+              {title}
+            </h3>
+
+            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+              {badge}
+            </span>
+          </div>
+
+          <p className="mt-1 max-w-xl text-xs leading-5 text-zinc-500">
+            {description}
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          {metrics.map((metric) => (
+            <div
+              key={metric.label}
+              className="border-zinc-800 sm:border-l sm:pl-4"
+            >
+              <p className="text-[11px] text-zinc-500">
+                {metric.label}
+              </p>
+
+              <p className="mt-1 text-sm font-bold text-zinc-100">
+                {metric.value}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-2 lg:items-end">
+          {typeof progress === "number" && (
+            <div className="h-2 w-full rounded-full bg-zinc-800 lg:w-24">
+              <div
+                className="h-2 rounded-full bg-cyan-400"
+                style={{
+                  width: `${progress}%`,
+                }}
+              />
+            </div>
+          )}
+
+          {to ? (
+            <Link
+              to={to}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-xs font-semibold text-zinc-200 transition hover:border-cyan-500/40 hover:text-cyan-300"
+            >
+              {actionContent}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={onAction}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-xs font-semibold text-zinc-200 transition hover:border-cyan-500/40 hover:text-cyan-300"
+            >
+              {actionContent}
+            </button>
+          )}
+        </div>
+      </div>
     </div>
+  );
+}
+
+function EvidenceSnapshotCard({
+  evidence,
+  onViewAll,
+}: {
+  evidence: Evidence[];
+  onViewAll: () => void;
+}) {
+  const visibleEvidence = evidence.slice(0, 5);
+
+  return (
+    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-lg shadow-black/20">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <HardDrive className="text-zinc-300" size={22} />
+
+          <h2 className="text-lg font-bold text-zinc-100">
+            Evidence Snapshot
+          </h2>
+        </div>
+
+        <button
+          type="button"
+          onClick={onViewAll}
+          className="inline-flex items-center gap-2 text-xs font-semibold text-cyan-300 hover:text-cyan-200"
+        >
+          View All Evidence
+          <ChevronRight size={14} />
+        </button>
+      </div>
+
+      {visibleEvidence.length === 0 ? (
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-sm text-zinc-500">
+          No active evidence available.
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-zinc-800">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-zinc-950 text-zinc-500">
+              <tr>
+                <th className="px-4 py-3 font-medium">
+                  Evidence Name
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  Type
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  Size
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  Collected At
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  Status
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-zinc-800 bg-zinc-950/70">
+              {visibleEvidence.map((item) => (
+                <tr key={item.id}>
+                  <td className="max-w-[280px] truncate px-4 py-3 font-semibold text-zinc-200">
+                    {item.filename}
+                  </td>
+                  <td className="px-4 py-3 text-zinc-400">
+                    {item.fileType}
+                  </td>
+                  <td className="px-4 py-3 text-zinc-400">
+                    {formatFileSize(item.size)}
+                  </td>
+                  <td className="px-4 py-3 text-zinc-400">
+                    {formatDateTime(item.importedAt)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <EvidenceStatusBadge
+                      status={item.status}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -1048,7 +1681,10 @@ function CaseSummaryCard({
   caseData: Case;
 }) {
   return (
-    <SideCard title="Case Summary">
+    <SideCard
+      title="Case Summary"
+      icon={<Shield size={20} />}
+    >
       <div className="space-y-4">
         <SummaryRow
           icon={<UserRound size={16} />}
@@ -1063,9 +1699,7 @@ function CaseSummaryCard({
         <SummaryRow
           icon={<CalendarDays size={16} />}
           label="Created"
-          value={new Date(
-            caseData.createdAt
-          ).toLocaleString()}
+          value={formatDateTime(caseData.createdAt)}
         />
 
         <SummaryRow
@@ -1077,39 +1711,29 @@ function CaseSummaryCard({
         <SummaryRow
           icon={<Clock3 size={16} />}
           label="Assigned At"
-          value={
-            caseData.assignedAt
-              ? new Date(
-                  caseData.assignedAt
-                ).toLocaleString()
-              : "-"
-          }
+          value={formatDateTime(caseData.assignedAt)}
         />
 
         <SummaryRow
           icon={<CheckCircle2 size={16} />}
           label="Status"
           value={caseData.status}
-          accent
+          accent="green"
         />
 
         <SummaryRow
           icon={<Shield size={16} />}
           label="Type"
-          value={
+          value={formatInvestigationType(
             caseData.investigationType
-              ? caseData.investigationType.replaceAll(
-                  "_",
-                  " "
-                )
-              : "MULTI SOURCE"
-          }
+          )}
         />
 
         <SummaryRow
           icon={<Activity size={16} />}
           label="Priority"
           value={caseData.priority ?? "MEDIUM"}
+          accent="yellow"
         />
 
         <SummaryRow
@@ -1119,36 +1743,112 @@ function CaseSummaryCard({
             caseData.classification ?? "INTERNAL"
           }
         />
-
-        <SummaryRow
-          icon={<Shield size={16} />}
-          label="Type"
-          value={
-            caseData.investigationType
-              ? caseData.investigationType.replaceAll(
-                  "_",
-                  " "
-                )
-              : "MULTI SOURCE"
-          }
-        />
-
-        <SummaryRow
-          icon={<Activity size={16} />}
-          label="Priority"
-          value={caseData.priority ?? "MEDIUM"}
-        />
-
-        <SummaryRow
-          icon={<Shield size={16} />}
-          label="Classification"
-          value={
-            caseData.classification ?? "INTERNAL"
-          }
-        />
-
       </div>
     </SideCard>
+  );
+}
+
+function QuickInsightsCard({
+  timelineEvents,
+  mitreFindings,
+  findings,
+  activities,
+  custodyLogs,
+  activeEvidenceSize,
+  lastImported,
+}: {
+  timelineEvents: number;
+  mitreFindings: number;
+  findings: number;
+  activities: number;
+  custodyLogs: number;
+  activeEvidenceSize: number;
+  lastImported: string | null;
+}) {
+  return (
+    <SideCard
+      title="Quick Insights"
+      icon={<Activity size={20} />}
+    >
+      <div className="space-y-3">
+        <InsightRow
+          icon={<Activity size={17} />}
+          title="High number of timeline events detected"
+          description={`${timelineEvents} events require analysis`}
+          tone="cyan"
+        />
+
+        <InsightRow
+          icon={<Shield size={17} />}
+          title={`${mitreFindings} MITRE techniques identified`}
+          description="Validate tactics, techniques, and attack stages"
+          tone="purple"
+        />
+
+        <InsightRow
+          icon={<AlertTriangle size={17} />}
+          title={`${findings} findings currently tracked`}
+          description={`${activities} activities and ${custodyLogs} custody logs are linked`}
+          tone="yellow"
+        />
+
+        <InsightRow
+          icon={<Database size={17} />}
+          title="Active evidence footprint"
+          description={`${formatFileSize(activeEvidenceSize)} active evidence size`}
+          tone="green"
+        />
+
+        <InsightRow
+          icon={<Clock3 size={17} />}
+          title="Latest import completed"
+          description={formatDateTime(lastImported)}
+          tone="cyan"
+        />
+      </div>
+    </SideCard>
+  );
+}
+
+function InsightRow({
+  icon,
+  title,
+  description,
+  tone,
+}: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  tone: "cyan" | "purple" | "yellow" | "green";
+}) {
+  const toneClass = {
+    cyan: "bg-cyan-500/10 text-cyan-300",
+    purple: "bg-purple-500/10 text-purple-300",
+    yellow: "bg-yellow-500/10 text-yellow-300",
+    green: "bg-emerald-500/10 text-emerald-300",
+  }[tone];
+
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/70 p-3 transition hover:border-cyan-500/30">
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${toneClass}`}>
+        {icon}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-zinc-100">
+          {title}
+        </p>
+
+        <p className="mt-0.5 truncate text-xs text-zinc-500">
+          {description}
+        </p>
+      </div>
+
+      <ChevronRight
+        size={15}
+        className="text-cyan-300"
+      />
+    </div>
   );
 }
 
@@ -1172,10 +1872,10 @@ function AttributionProjectionCard({
       : "border-zinc-700 bg-black/40 text-zinc-500";
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/20">
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-lg shadow-black/20">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-bold">
+          <h2 className="text-lg font-bold text-zinc-100">
             Threat Attribution
           </h2>
 
@@ -1235,10 +1935,7 @@ function AttributionProjectionCard({
 
       {projection?.updatedAt && (
         <p className="mt-4 text-[11px] text-zinc-500">
-          Updated:{" "}
-          {new Date(
-            projection.updatedAt
-          ).toLocaleString()}
+          Updated: {formatDateTime(projection.updatedAt)}
         </p>
       )}
     </div>
@@ -1259,7 +1956,7 @@ function ProjectionRow({
       </span>
 
       <span
-        className="max-w-[190px] text-right font-medium text-zinc-200 line-clamp-2"
+        className="max-w-[220px] text-right font-medium text-zinc-200 line-clamp-2"
         title={value}
       >
         {value}
@@ -1272,13 +1969,20 @@ function SummaryRow({
   icon,
   label,
   value,
-  accent = false,
+  accent,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
-  accent?: boolean;
+  accent?: "green" | "yellow";
 }) {
+  const accentClass =
+    accent === "green"
+      ? "text-emerald-300"
+      : accent === "yellow"
+      ? "text-yellow-300"
+      : "text-zinc-200";
+
   return (
     <div className="grid grid-cols-[20px_1fr_1.35fr] items-center gap-2 text-xs">
       <span className="text-zinc-500">
@@ -1290,11 +1994,7 @@ function SummaryRow({
       </p>
 
       <p
-        className={`truncate text-right font-medium ${
-          accent
-            ? "text-green-400"
-            : "text-zinc-200"
-        }`}
+        className={`truncate text-right font-semibold ${accentClass}`}
         title={value}
       >
         {value}
@@ -1303,157 +2003,31 @@ function SummaryRow({
   );
 }
 
-function QuickActionsCard({
-  caseData,
-  onReassign,
-}: {
-  caseData: Case;
-  onReassign: () => void;
-}) {
-  return (
-    <SideCard title="Quick Actions">
-      <div className="grid grid-cols-3 gap-3">
-        <PermissionGuard permission="case:assign">
-          <button
-            onClick={onReassign}
-            className="flex flex-col items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-4 text-xs font-medium text-cyan-300 hover:bg-cyan-500/20"
-          >
-            <UserRound size={18} />
-            Reassign
-          </button>
-        </PermissionGuard>
-
-        <Link
-          to={`/cases/${caseData.id}/graph`}
-          className="flex flex-col items-center justify-center gap-2 rounded-xl border border-purple-500/30 bg-purple-500/10 px-3 py-4 text-center text-xs font-medium text-purple-300 hover:bg-purple-500/20"
-        >
-          <GitBranch size={18} />
-          Graph
-        </Link>
-
-        <button
-          disabled
-          className="flex cursor-not-allowed flex-col items-center justify-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-3 py-4 text-xs font-medium text-yellow-700"
-        >
-          <FileText size={18} />
-          Report
-        </button>
-      </div>
-    </SideCard>
-  );
-}
-
-function QuickCountsCard({
-  activeEvidence,
-  excludedEvidence,
-  timeline,
-  findings,
-  mitre,
-  activities,
-  custody,
-  activeSize,
-}: {
-  activeEvidence: number;
-  excludedEvidence: number;
-  timeline: number;
-  findings:number;
-  mitre: number;
-  activities: number;
-  custody: number;
-  activeSize: number;
-}) {
-  return (
-    <SideCard title="Quick Counts">
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        <MiniCount
-          label="Active Evidence"
-          value={activeEvidence}
-        />
-
-        <MiniCount
-          label="Excluded"
-          value={excludedEvidence}
-        />
-        <MiniCount
-          label="Timeline Events"
-          value={timeline}
-        />
-        <MiniCount
-          label="Findings"
-          value={findings}
-        />
-
-        <MiniCount
-          label="MITRE Findings"
-          value={mitre}
-          accent
-        />
-
-        <MiniCount
-          label="Activities"
-          value={activities}
-        />
-
-        <MiniCount
-          label="Custody Logs"
-          value={custody}
-        />
-      </div>
-
-      <div className="mt-3 rounded-xl border border-zinc-800 bg-black/80 p-3">
-        <p className="text-xs text-zinc-500">
-          Active Evidence Size
-        </p>
-
-        <p className="mt-1 text-lg font-bold">
-          {formatFileSize(activeSize)}
-        </p>
-      </div>
-    </SideCard>
-  );
-}
-
 function SideCard({
   title,
+  icon,
   children,
 }: {
   title: string;
+  icon?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/20">
-      <h2 className="mb-4 text-base font-bold">
-        {title}
-      </h2>
+    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-lg shadow-black/20">
+      <div className="mb-5 flex items-center gap-3">
+        {icon && (
+          <span className="text-zinc-300">
+            {icon}
+          </span>
+        )}
+
+        <h2 className="text-lg font-bold text-zinc-100">
+          {title}
+        </h2>
+      </div>
 
       {children}
-    </div>
-  );
-}
-
-function MiniCount({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: number;
-  accent?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-zinc-800 bg-black/80 p-3">
-      <p className="text-[11px] text-zinc-500">
-        {label}
-      </p>
-
-      <p
-        className={`mt-1 text-lg font-bold ${
-          accent ? "text-cyan-400" : "text-white"
-        }`}
-      >
-        {value}
-      </p>
-    </div>
+    </section>
   );
 }
 
@@ -1471,19 +2045,19 @@ function CaseActivityCompact({
     : activities.slice(0, 8);
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/20">
+    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-lg shadow-black/20">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-base font-bold">
+          <h2 className="text-lg font-bold text-zinc-100">
             Case Activity Timeline
           </h2>
 
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-zinc-500">
             Unified stream from audit, custody, assignment, and timeline events.
           </p>
         </div>
 
-        <span className="text-xs text-zinc-400">
+        <span className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-1 text-xs text-zinc-400">
           {activities.length} events
         </span>
       </div>
@@ -1500,7 +2074,7 @@ function CaseActivityCompact({
               onClick={() =>
                 onSelectActivity(activity)
               }
-              className="w-full rounded-xl border border-zinc-800 bg-black/80 p-3 text-left transition hover:border-cyan-600"
+              className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 p-3 text-left transition hover:border-cyan-600"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -1530,16 +2104,14 @@ function CaseActivityCompact({
                 </div>
 
                 <p className="shrink-0 text-[11px] text-zinc-500">
-                  {new Date(
-                    activity.timestamp
-                  ).toLocaleString()}
+                  {formatDateTime(activity.timestamp)}
                 </p>
               </div>
             </button>
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -1602,14 +2174,14 @@ function EvidenceWorkspace({
   }, [evidence, search, statusFilter]);
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/20">
+    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-lg shadow-black/20">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <h2 className="text-base font-bold">
+          <h2 className="text-lg font-bold text-zinc-100">
             Evidence Repository
           </h2>
 
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-zinc-500">
             Active and excluded evidence linked to this investigation case.
           </p>
         </div>
@@ -1619,7 +2191,7 @@ function EvidenceWorkspace({
             className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition ${
               isUploading
                 ? "bg-zinc-700 text-zinc-400"
-                : "cursor-pointer bg-cyan-600 hover:bg-cyan-700"
+                : "cursor-pointer bg-cyan-500 text-zinc-950 hover:bg-cyan-400"
             }`}
           >
             <Upload size={15} />
@@ -1644,14 +2216,14 @@ function EvidenceWorkspace({
         </PermissionGuard>
       </div>
 
-      <div className="mt-5 grid gap-3 lg:grid-cols-[auto_auto_minmax(220px,1fr)_auto_auto]">
+      <div className="mt-5 grid gap-3 lg:grid-cols-[auto_auto_auto_minmax(220px,1fr)_auto_auto]">
         <button
           onClick={() =>
             setStatusFilter("ACTIVE")
           }
           className={`rounded-lg px-4 py-2 text-xs ${
             statusFilter === "ACTIVE"
-              ? "bg-cyan-600 text-white"
+              ? "bg-cyan-500 text-zinc-950"
               : "border border-zinc-800 text-zinc-400 hover:bg-zinc-800"
           }`}
         >
@@ -1671,6 +2243,19 @@ function EvidenceWorkspace({
           Excluded ({excludedEvidence.length})
         </button>
 
+        <button
+          onClick={() =>
+            setStatusFilter("ALL")
+          }
+          className={`rounded-lg px-4 py-2 text-xs ${
+            statusFilter === "ALL"
+              ? "bg-zinc-200 text-zinc-950"
+              : "border border-zinc-800 text-zinc-400 hover:bg-zinc-800"
+          }`}
+        >
+          All ({evidence.length})
+        </button>
+
         <div className="relative">
           <Search
             size={15}
@@ -1683,7 +2268,7 @@ function EvidenceWorkspace({
               setSearch(e.target.value)
             }
             placeholder="Search evidence..."
-            className="w-full rounded-lg border border-zinc-800 bg-black/80 py-2 pl-9 pr-3 text-xs outline-none focus:border-cyan-600"
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 py-2 pl-9 pr-3 text-xs outline-none focus:border-cyan-600"
           />
         </div>
 
@@ -1691,9 +2276,12 @@ function EvidenceWorkspace({
           <SlidersHorizontal size={15} />
         </button>
 
-        <button className="rounded-lg border border-zinc-800 px-3 py-2 text-zinc-400 hover:bg-zinc-800">
-          <GitBranch size={15} />
-        </button>
+        <Link
+          to="evidence-imaging"
+          className="inline-flex items-center justify-center rounded-lg border border-zinc-800 px-3 py-2 text-zinc-400 hover:bg-zinc-800"
+        >
+          <HardDrive size={15} />
+        </Link>
       </div>
 
       {visibleEvidence.length === 0 ? (
@@ -1715,7 +2303,7 @@ function EvidenceWorkspace({
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -1732,7 +2320,7 @@ function EvidenceCard({
 }) {
   return (
     <div
-      className={`overflow-hidden rounded-xl border bg-black/80 transition hover:border-zinc-700 ${
+      className={`overflow-hidden rounded-xl border bg-zinc-950/80 transition hover:border-zinc-700 ${
         item.status === "EXCLUDED"
           ? "border-red-500/30 opacity-80"
           : "border-zinc-800"
@@ -1749,7 +2337,7 @@ function EvidenceCard({
             </div>
 
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold">
+              <p className="truncate text-sm font-bold text-zinc-100">
                 {item.filename}
               </p>
 
@@ -1770,9 +2358,7 @@ function EvidenceCard({
 
                 <InfoBlock
                   label="Imported"
-                  value={new Date(
-                    item.importedAt
-                  ).toLocaleString()}
+                  value={formatDateTime(item.importedAt)}
                 />
               </div>
             </div>
@@ -1846,12 +2432,12 @@ function InfoBlock({
 }) {
   return (
     <div className="min-w-0">
-      <p className="text-zinc-500">
+      <p className="text-xs text-zinc-500">
         {label}
       </p>
 
       <p
-        className="truncate text-zinc-200"
+        className="truncate text-sm font-semibold text-zinc-100"
         title={value}
       >
         {value}
@@ -1938,9 +2524,7 @@ function ActivityDrawer({
             </p>
 
             <p>
-              {new Date(
-                activity.timestamp
-              ).toLocaleString()}
+              {formatDateTime(activity.timestamp)}
             </p>
           </div>
 
@@ -1959,105 +2543,14 @@ function ActivityDrawer({
   );
 }
 
-function DomainWorkspaceCard({
-  investigationType,
+function EmptyPanel({
+  text,
 }: {
-  investigationType?: string;
+  text: string;
 }) {
-  const type =
-    (investigationType ??
-      "MULTI_SOURCE") as InvestigationType;
-
-  const domainTabs =
-    getDomainTabs(type);
-
-  if (domainTabs.length === 0) {
-    return null;
-  }
-
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/20">
-      <h2 className="text-base font-bold">
-        Domain Workspace
-      </h2>
-
-      <p className="mt-1 text-xs text-zinc-400">
-        Investigation modules activated for{" "}
-        {type.replaceAll("_", " ")}.
-      </p>
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {domainTabs.map((tab) => (
-          <div
-            key={tab.id}
-            className="rounded-xl border border-zinc-800 bg-black/70 p-4"
-          >
-            <p className="text-sm font-semibold text-zinc-100">
-              {tab.label}
-            </p>
-
-            <p className="mt-1 text-xs text-zinc-500">
-              Case-linked forensic module.
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ActiveModulesCard({
-  tabs,
-}: {
-  tabs: {
-    id: string;
-    label: string;
-    group: string;
-  }[];
-}) {
-  const domainTabs =
-    tabs.filter(
-      (tab) => tab.group === "domain"
-    );
-
-  if (domainTabs.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/20">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-bold">
-            Active Investigation Modules
-          </h2>
-
-          <p className="text-xs text-zinc-400">
-            Modules activated based on investigation type.
-          </p>
-        </div>
-
-        <span className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-400">
-          {domainTabs.length} modules
-        </span>
-      </div>
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {domainTabs.map((tab) => (
-          <div
-            key={tab.id}
-            className="rounded-xl border border-zinc-800 bg-black/70 p-4"
-          >
-            <p className="text-sm font-semibold text-zinc-100">
-              {tab.label}
-            </p>
-
-            <p className="mt-1 text-xs text-zinc-500">
-              Case-linked forensic module.
-            </p>
-          </div>
-        ))}
-      </div>
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 text-sm text-zinc-400 shadow-lg shadow-black/20">
+      {text}
     </div>
   );
 }

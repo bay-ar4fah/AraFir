@@ -9,22 +9,60 @@ import type {
 const API_URL =
   "http://localhost:3001/api";
 
+function buildNoCacheUrl(path: string): string {
+  const url = new URL(`${API_URL}${path}`);
+
+  url.searchParams.set(
+    "_ts",
+    Date.now().toString()
+  );
+
+  return url.toString();
+}
+
+async function parseErrorMessage(
+  response: Response
+): Promise<string> {
+  const error =
+    await response.json().catch(() => null);
+
+  return (
+    error?.error ||
+    error?.message ||
+    `Request failed with status ${response.status}`
+  );
+}
+
 export async function getInvestigationDashboard():
   Promise<InvestigationDashboard> {
+  const headers =
+    new Headers(getAuthHeaders());
+
+  headers.set(
+    "Cache-Control",
+    "no-cache"
+  );
+
+  headers.set(
+    "Pragma",
+    "no-cache"
+  );
+
   const response = await fetch(
-    `${API_URL}/dashboard/investigation`,
+    buildNoCacheUrl("/dashboard/investigation"),
     {
-      headers: getAuthHeaders(),
+      method: "GET",
+      headers,
+      cache: "no-store",
     }
   );
 
   if (!response.ok) {
-    const error =
-      await response.json().catch(() => null);
+    const message =
+      await parseErrorMessage(response);
 
     throw new Error(
-      error?.error ||
-        error?.message ||
+      message ||
         "Failed to load investigation dashboard"
     );
   }
