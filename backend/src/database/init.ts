@@ -470,6 +470,45 @@ export function initDatabase() {
       ON memory_artifacts(severity);
     `);
 
+    db.run(`
+      CREATE TABLE IF NOT EXISTS evidence_images (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        case_id TEXT NOT NULL,
+        evidence_id TEXT,
+        source_device TEXT NOT NULL,
+        source_type TEXT NOT NULL,
+        image_format TEXT NOT NULL,
+        image_path TEXT,
+        image_size_bytes INTEGER,
+        acquisition_tool TEXT,
+        write_blocker_used INTEGER NOT NULL DEFAULT 0,
+        hash_md5 TEXT,
+        hash_sha1 TEXT,
+        hash_sha256 TEXT,
+        verification_status TEXT NOT NULL DEFAULT 'PLANNED',
+        acquired_by TEXT,
+        acquired_at TEXT,
+        notes TEXT,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT
+      )
+    `);
+
+    db.run(`
+      CREATE INDEX IF NOT EXISTS idx_evidence_images_case_id
+      ON evidence_images(case_id)
+    `);
+
+    db.run(`
+      CREATE INDEX IF NOT EXISTS idx_evidence_images_evidence_id
+      ON evidence_images(evidence_id)
+    `);
+
+    db.run(`
+      CREATE INDEX IF NOT EXISTS idx_evidence_images_status
+      ON evidence_images(verification_status)
+    `);
+
     console.log(
       "Database Initialized"
     );

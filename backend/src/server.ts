@@ -49,6 +49,8 @@ import lessonsLearnedRoutes from "./routes/lessonsLearnedRoutes";
 
 import memoryRoutes from "./routes/memoryRoutes";
 
+import evidenceImagingRoutes from "./routes/evidenceImagingRoutes";
+
 initDatabase();
 
 setTimeout(() => {
@@ -168,6 +170,8 @@ app.use(
 );
 
 app.use("/api", memoryRoutes);
+
+app.use("/api", evidenceImagingRoutes);
 
 app.use(
   "/api", 
