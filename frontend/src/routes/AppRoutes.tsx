@@ -81,9 +81,9 @@ export default function AppRoutes() {
           element={<EvidenceImagingWorkspace />}
         />
 
-        <Route 
-          path="/cases/:caseId/memory" 
-          element={<MemoryWorkspace />} 
+        <Route
+          path="/cases/:caseId/memory"
+          element={<MemoryWorkspace />}
         />
 
         <Route

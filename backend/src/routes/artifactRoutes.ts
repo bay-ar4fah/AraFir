@@ -6,22 +6,31 @@ import {
 
 import {
   uploadEvidenceFile,
+  handleEvidenceUploadError,
 } from "../middleware/uploadMiddleware";
-import { requireAuth } from "../middleware/authMiddleware";
-import { requirePermission } from "../middleware/rbacMiddleware";
+
+import {
+  requireAuth,
+} from "../middleware/authMiddleware";
+
+import {
+  requirePermission,
+} from "../middleware/rbacMiddleware";
 
 const router = Router();
 
 router.post(
   "/cases/:caseId/artifacts",
-  uploadEvidenceFile.single("file"),
-  uploadArtifact,
   requireAuth,
-  requirePermission("evidence:create")
+  requirePermission("evidence:create"),
+  uploadEvidenceFile.single("file"),
+  handleEvidenceUploadError,
+  uploadArtifact
 );
 
 router.get(
   "/cases/:caseId/artifacts/test",
+  requireAuth,
   (_req, res) => {
     res.json({
       message: "Artifact route OK",
